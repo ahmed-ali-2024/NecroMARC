@@ -50,7 +50,7 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
 - [ ] 2. Checkpoint - Phase 1 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 3. Phase 2a: Parser core (Module A)
+- [x] 3. Phase 2a: Parser core (Module A)
   - [x] 3.1 Define parser data models
     - `backend/parser/model.py`: frozen dataclasses `Anomaly`, `Subfield`, `Field` (with `ai` flag), `ParsedRecord` (with derived values), `ParseError`, `ParseResult`. Absent values are `None` or empty tuples, never empty strings.
     - _Requirements: 1.2, 1.5, 17.3_
@@ -80,27 +80,27 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - **Property 2: Record count and order**
     - **Validates: Requirements 1.1, 1.9, 1.10, 1.11, 16.2**
 
-  - [-] 3.8 Write property test for field extraction fidelity
+  - [x] 3.8 Write property test for field extraction fidelity
     - **Property 3: Field extraction fidelity**
     - **Validates: Requirements 1.2, 1.3, 1.4, 1.5**
 
-  - [-] 3.9 Write property test for encoding detection and decoding
+  - [x] 3.9 Write property test for encoding detection and decoding
     - **Property 4: Encoding detection and decoding**
     - **Validates: Requirements 1.6, 1.7, 1.8**
 
-  - [-] 3.10 Write property test for Pretty_Printer structure
+  - [x] 3.10 Write property test for Pretty_Printer structure
     - **Property 5: Pretty_Printer structural consistency**
     - **Validates: Requirements 1.13**
 
-  - [-] 3.11 Write the two-part round-trip property tests
+  - [x] 3.11 Write the two-part round-trip property tests
     - **Property 6: Parse, print, parse round trip** (strict test over `valid_utf8_full_marc()`: `parse(print(parse(x))) == parse(x)`; normalized test over `parseable_marc()`: `print(parse(print(parse(x)))) == print(parse(x))`)
     - **Validates: Requirements 1.14, 1.15, 16.6**
 
-  - [ ] 3.12 Write fixture-based unit tests for the parser
+  - [x] 3.12 Write fixture-based unit tests for the parser
     - Project Gutenberg, Library of Congress SRU, and intentionally corrupted samples (MARC-8 mojibake, byte-truncated records): every readable record parses, every unreadable one yields a structured error, and the batch never aborts. Cover empty input and short Leader/008.
     - _Requirements: 1.5, 1.9, 1.10, 1.12_
 
-- [ ] 4. Phase 2b: Decay Score and Vitality
+- [x] 4. Phase 2b: Decay Score and Vitality
   - [x] 4.1 Implement the Decay_Calculator
     - `backend/decay/rules.py`: `RULES` in order `missing_520` (30), `missing_650` (25), `invalid_year` (20), `missing_100d` (15), `anomaly` (10). `calculate_decay(rec, current_year)` is pure and total, uses `re.fullmatch(r"[0-9]{4}", ...)` with range 1000..current_year+1, and returns `DecayResult` with an ordered breakdown. `current_year` is injected.
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10_
@@ -109,16 +109,16 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - `backend/decay/vitality.py`: `vitality_score(healed, year) = 100 - decay`, and `apply_resurrection(rec, result, year)` which adds AI-flagged 520 and 650 fields (never overwrites originals), repairs or synthesizes the 008 year, resolves `ENCODING_MISMATCH` anomalies, and keeps the other anomalies.
     - _Requirements: 2.11, 3.7, 10.7_
 
-  - [-] 4.3 Write property tests for decay sum, range, breakdown, and determinism
+  - [x] 4.3 Write property tests for decay sum, range, breakdown, and determinism
     - **Property 7: Decay score is the sum of applied rules**
     - **Property 8: Decay determinism**
     - **Validates: Requirements 2.1-2.10, 16.3, 16.4, 16.5**
 
-  - [ ] 4.4 Write property test for summary monotonicity
+  - [x] 4.4 Write property test for summary monotonicity
     - **Property 9: Adding a summary never increases decay**
     - **Validates: Requirements 16.8**
 
-  - [ ] 4.5 Write property test for Vitality
+  - [x] 4.5 Write property test for Vitality
     - **Property 10: Vitality is the complement of decay of the healed record**
     - **Validates: Requirements 2.11**
 
@@ -126,7 +126,7 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
   - Ensure all tests pass, ask the user if questions arise. The parser and decay suites together must finish within 60 seconds on one worker.
   - _Requirements: 16.12_
 
-- [ ] 6. Phase 3: Kiro hook and MCP documentation
+- [x] 6. Phase 3: Kiro hook and MCP documentation
   - [x] 6.1 Create the parser-test hook and wrapper script
     - `scripts/run_parser_tests.sh`: run `pytest backend/parser`, copy the combined output to stderr and to `.kiro/hooks/last-run.log`, exit with pytest's status.
     - `.kiro/hooks/parser-tests-on-save.json` with `{version, hooks:[{name, trigger: "PostFileSave", matcher: "^backend/parser/.*", action: {type: "command", ...}}]}`. Use the `ci` Hypothesis profile so the run stays under the hook timeout.
@@ -137,14 +137,14 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - `docs/mcp.md`: Supabase MCP (server name as in `.kiro/settings/mcp.json`, read-only, project ref `rgslhkioqynhgfqrwagm`) with example inspection tasks (list tables and RLS state, policies on `marc_records`, `explain` of `match_marc_records`, `anon` grants on `rate_limits`). State that the Library of Congress SRU MCP server is optional for fetching live MARCXML and name it as it appears in the MCP configuration. Do not include keys.
     - _Requirements: 19.5, 19.6_
 
-  - [ ] 6.3 Write a hook schema test
+  - [x] 6.3 Write a hook schema test
     - Check that the hook file matches `{version, hooks:[{name, trigger, matcher, action}]}`, that the matcher matches `backend/parser/x.py` and not other paths, and that `.gitignore` does not exclude `.kiro/`.
     - _Requirements: 19.1, 19.2, 19.3_
 
 - [ ] 7. Checkpoint - Phase 3 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 8. Phase 4: Supabase migrations
+- [x] 8. Phase 4: Supabase migrations
   - [x] 8.1 Write extension and `marc_records` migrations
     - `supabase/migrations/20260101000001_extensions.sql` (vector and pg_trgm in the `extensions` schema) and `20260101000002_marc_records.sql`: columns, CHECK constraints (status, `decay_score` 0..100, `vitality_score`, `year`), `unique (source, control_number)`, FTS trigger with `search_tsv`, GIN, trigram, and year indexes, and the HNSW index with `vector_cosine_ops` on `vector(768)`.
     - _Requirements: 4.6, 6.1, 6.10, 6.11, 6.12, 6.13, 6.14_
@@ -161,11 +161,11 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - `20260101000006_security.sql`: enable RLS on all three tables, revoke everything from `public`, `anon`, `authenticated`, grant `SELECT` on `marc_records` and `knowledge_edges` with public select policies, no policy and no grant on `rate_limits`, full grants to `service_role`, and `EXECUTE` on every function for `service_role` only.
     - _Requirements: 6.2, 6.3, 6.4, 6.5, 6.6, 6.8_
 
-  - [ ] 8.5 Apply and verify the schema through the Supabase MCP server
+  - [x] 8.5 Apply and verify the schema through the Supabase MCP server
     - Write `supabase/tests/assertions.sql` (tables, functions, constraints, HNSW index, RLS flags, policies, `anon` grants and privilege failures). Apply the migrations in order and run the assertions through the Supabase MCP tools, using the advisor checks for security and performance. Record the outcome in `docs/mcp.md`. Do not paste keys.
     - _Requirements: 6.1-6.6, 6.14_
 
-  - [ ] 8.6 Write database integration tests
+  - [x] 8.6 Write database integration tests
     - pytest tests against a local Supabase or throwaway Postgres 15 with pgvector: constraint rejections leave rows unchanged, `anon` and `authenticated` writes fail, `match_marc_records` leaves data unchanged and respects threshold, limit, and exclusion, `store_resurrection` rolls back record and edges together, and 50 concurrent `rate_limit_hit` calls on one key produce a count of exactly 50 plus a window-reset case. Skipped automatically when no database is configured.
     - **Property 28: Fixed-window rate limiter (database integration part)**
     - **Validates: Requirements 3.7, 5.9, 6.2-6.13, 9.9, 9.12**
@@ -173,218 +173,218 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
 - [ ] 9. Checkpoint - Phase 4 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Phase 5a: Flask foundation
-  - [ ] 10.1 Build the app factory, middleware, and health route
+- [x] 10. Phase 5a: Flask foundation
+  - [x] 10.1 Build the app factory, middleware, and health route
     - `backend/app/__init__.py` (`create_app`, automatic blueprint discovery so later route modules need no factory edits), `errors.py` (error envelope `{"error": {"code", "message"}}` for `ApiError`, HTTP exceptions, `DatabaseUnavailable`, and a generic 500), `mount.py` (`MountNormalizer`, 404 for non-`/api` paths), `cors.py` (exact-match origins, no wildcard, preflight 204), and `routes/health.py`. Wire into `passenger_wsgi.py`.
     - _Requirements: 8.13, 17.1, 17.7, 17.8, 17.9, 17.10, 17.11_
 
-  - [ ] 10.2 Implement the PostgREST client and repositories
+  - [x] 10.2 Implement the PostgREST client and repositories
     - `backend/db/client.py` (httpx, service role key from Config, `select` with count and range, `rpc`, escaped filter values, errors become `DatabaseUnavailable`) and `backend/db/records.py` and `edges.py` repositories, with an in-memory `FakeRecordsRepo` for tests that implements the same interface.
     - _Requirements: 6.8, 6.9, 17.3_
 
-  - [ ] 10.3 Write property tests for the error envelope and CORS
+  - [x] 10.3 Write property tests for the error envelope and CORS
     - **Property 26: Error envelope shape**
     - **Property 31: CORS origin matching**
     - **Validates: Requirements 8.13, 17.9, 17.10, 17.11**
 
-- [ ] 11. Phase 5b: Public endpoints
-  - [ ] 11.1 Implement records list and detail routes
+- [x] 11. Phase 5b: Public endpoints
+  - [x] 11.1 Implement records list and detail routes
     - `routes/records.py` and `routes/search.py`: `GET /api/records` (full-text `q`, `title`, `author`, `era_from`, `era_to`, `topic`, AND semantics, inclusive era, pagination with total, page, and page size, empty page past the end) and `GET /api/records/{id}` (raw versus healed, decay, vitality, no embedding vector). Validate with jsonschema: `INVALID_PAGINATION`, `INVALID_ERA`, `INVALID_ID` (400), `NOT_FOUND` (404).
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12, 8.13_
 
-  - [ ] 11.2 Implement similar-records, normalization, and graph endpoints
+  - [x] 11.2 Implement similar-records, normalization, and graph endpoints
     - `backend/graph/normalize.py` (`normalize_text`, `extract_year`, `decade`, `canonical_pair`) and `graph/elements.py` (Cytoscape elements with book, author, and subject nodes, stored edges, derived structural edges, a record cap). Add `GET /api/records/{id}/similar` (stored vector via `match_marc_records`, max 10, similarity >= 0.5, self excluded, `has_embedding:false` with an empty list for a null embedding, no Gemini call) and `GET /api/graph`.
     - _Requirements: 4.8, 4.9, 5.6, 5.7, 5.10, 5.11, 8.1, 8.6_
 
-  - [ ] 11.3 Write property tests for search, normalization, and graph elements
+  - [x] 11.3 Write property tests for search, normalization, and graph elements
     - **Property 25: Search filters and pagination** (using `FakeRecordsRepo`)
     - **Property 17: Normalization and year extraction**
     - **Property 20: Graph elements are self-consistent**
     - **Validates: Requirements 5.6, 5.7, 5.11, 8.2-8.5, 8.7-8.11**
 
-- [ ] 12. Phase 5c: Exporters
-  - [ ] 12.1 Implement provenance, ISO 2709, and MARCXML exporters
+- [x] 12. Phase 5c: Exporters
+  - [x] 12.1 Implement provenance, ISO 2709, and MARCXML exporters
     - `backend/exporter/provenance.py` (`materialize_provenance` adds `$9 NecroMARC-AI` only to `ai=True` 520/650 occurrences), `marc.py` (UTF-8, Leader/09 `a`, `RecordTooLarge` handling), and `marcxml.py` (well-formed UTF-8 from the same materialized record).
     - _Requirements: 10.1, 10.2, 10.7, 10.8, 10.9_
 
-  - [ ] 12.2 Implement the JSON-LD exporter
+  - [x] 12.2 Implement the JSON-LD exporter
     - `backend/exporter/jsonld.py`: deterministic schema.org `Book` built from MARC data, gaps filled from the sanitized LLM `json_ld`, `@context` always `https://schema.org` and `@type` always `Book`, BIBFRAME-inspired `additionalType`.
     - _Requirements: 10.3_
 
-  - [ ] 12.3 Implement the export route
+  - [x] 12.3 Implement the export route
     - `GET /api/records/{id}/export?format=mrc|marcxml|jsonld`: content types `application/marc`, `application/marcxml+xml`, `application/ld+json`, `Content-Disposition: attachment` with `{id}.mrc|.xml|.jsonld`, validation order id, format, existence, build. `400 INVALID_FORMAT` listing supported formats, `404`, and `422 RECORD_TOO_LARGE` suggesting `marcxml` or `jsonld` with no partial bytes.
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.9_
 
-  - [ ] 12.4 Write property tests for provenance and export round trips
+  - [x] 12.4 Write property tests for provenance and export round trips
     - **Property 29: Provenance only on AI-written fields**
     - **Property 30: Export round trips**
     - **Validates: Requirements 10.1, 10.2, 10.7, 10.8, 10.9, 10.10, 10.11**
 
-- [ ] 13. Phase 5d: Judge auth, rate limiting, upload and batch limits
-  - [ ] 13.1 Implement credentials, tokens, and the `judge_required` decorator
+- [x] 13. Phase 5d: Judge auth, rate limiting, upload and batch limits
+  - [x] 13.1 Implement credentials, tokens, and the `judge_required` decorator
     - `backend/auth/credentials.py` (both `hmac.compare_digest` comparisons always evaluated, combined with `&`), `tokens.py` (HS256 only, header algorithm pre-check rejects `none`, required `exp`, `iat`, `sub`, `jti`), and `decorators.py` (401 with `WWW-Authenticate: Bearer` and one generic body for every failure reason). No server-side session state.
     - _Requirements: 7.1, 7.2, 7.3, 7.7, 7.8, 7.9, 7.10_
 
-  - [ ] 13.2 Implement the Supabase-backed Rate_Limiter
+  - [x] 13.2 Implement the Supabase-backed Rate_Limiter
     - `backend/ratelimit/limiter.py`: `hit(key, limit, window)` through the `rate_limit_hit` RPC, keys `judge:<sub>` and `ip:<addr>`, `X-Forwarded-For` ignored unless `TRUST_FORWARDED_FOR=true`, and a `DatabaseUnavailable` result that gives 503 and fails closed. Blocked responses carry `Retry-After >= 1`.
     - _Requirements: 7.11, 9.8, 9.9, 9.10, 9.11, 9.12, 9.13, 9.14_
 
-  - [ ] 13.3 Implement login, upload, and sample tomb routes
+  - [x] 13.3 Implement login, upload, and sample tomb routes
     - `routes/auth.py`: `POST /api/auth/login` counts every attempt per IP (5 per 60 s) before evaluating credentials, generic `401`, `429` with `Retry-After`. `routes/upload.py`: `POST /api/upload-mrc` order is authenticate, rate limit, size check (413 before parsing), parse, score, stateless. `routes/samples.py` and the bundled `backend/samples/tomb.mrc` (5 or fewer records, built with the printer) for `GET /api/samples/tomb`.
     - _Requirements: 7.1, 7.2, 7.7, 7.11, 9.1, 9.7, 9.10, 9.11, 9.13_
 
-  - [ ] 13.4 Implement the `/api/resurrect` guards
+  - [x] 13.4 Implement the `/api/resurrect` guards
     - `routes/resurrect.py`: authenticate, rate limit, then reject 0 records (`400 EMPTY_BATCH`) and more than 5 records (`413 BATCH_TOO_LARGE`) with no upstream call, then validate each record with jsonschema. Return a clear `NOT_IMPLEMENTED` placeholder for the processing stage that Phase 6 wires in.
     - _Requirements: 7.7, 9.2, 9.5, 9.6_
 
-  - [ ] 13.5 Write property tests for authentication
+  - [x] 13.5 Write property tests for authentication
     - **Property 22: Judge token verification**
     - **Property 23: Credential check and generic failure**
     - **Validates: Requirements 7.1-7.3, 7.7-7.10**
 
-  - [ ] 13.6 Write property test and route tests for the rate limiter
+  - [x] 13.6 Write property test and route tests for the rate limiter
     - **Property 28: Fixed-window rate limiter** (in-memory model plus route-level tests for the login throttle, 429 with `Retry-After`, and 503 on database failure)
     - **Validates: Requirements 7.11, 9.9-9.14**
 
 - [ ] 14. Checkpoint - Phase 5 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Phase 6: AI Necromancer
-  - [ ] 15.1 Implement the Resurrection_Result schema and prompt builder
+- [x] 15. Phase 6: AI Necromancer
+  - [x] 15.1 Implement the Resurrection_Result schema and prompt builder
     - `backend/ai/resurrection_schema.py` (`build_resurrection_schema(current_year)` for draft-07 with `additionalProperties: false`, summary 50..1000 chars, 3..5 unique subjects, year 1000..current year, `json_ld` `@context`/`@type` constants) and `prompts.py` (system prompt plus compact record JSON as data only). Sanitize `json_ld` with a schema.org Book key allowlist.
     - _Requirements: 3.3, 3.4_
 
-  - [ ] 15.2 Implement the OpenRouter client
+  - [x] 15.2 Implement the OpenRouter client
     - `backend/ai/openrouter.py`: httpx POST to `https://openrouter.ai/api/v1/chat/completions` with a 30 s timeout, the configured primary model then fallbacks in order, one attempt per fallback, one retry of the same model after invalid 2xx content, `Failure(validation_failed)` or `Failure(all_models_unavailable)`, never raises, key from Config only and never logged. No ML library imports.
     - _Requirements: 3.1, 3.2, 3.4, 3.5, 3.6, 3.8, 3.9_
 
-  - [ ] 15.3 Implement the Gemini embedding client
+  - [x] 15.3 Implement the Gemini embedding client
     - `backend/ai/embeddings.py`: `build_embedding_input` (title, author, summary, subjects; trimmed; newline-joined; truncated to 8,000 chars; empty gives `NO_EMBEDDABLE_TEXT` with no HTTP call), `l2_normalize` (overflow-safe scaling, structured error for a zero vector), and `GeminiEmbeddingClient.embed` (model `gemini-embedding-001`, `outputDimensionality` 768, `RETRIEVAL_DOCUMENT` or `RETRIEVAL_QUERY`, 30 s timeout, length-768 check, never raises, key from Config only).
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.7, 4.13_
 
-  - [ ] 15.4 Implement edge computation
+  - [x] 15.4 Implement edge computation
     - `backend/graph/edges.py`: `compute_edges` for SHARED_SUBJECT (`shared / max(distinct counts)`), SAME_AUTHOR (1.0), SAME_ERA (equal decade, 1.0), SEMANTIC_SIMILARITY (weight is the similarity at or above the threshold). Skip missing inputs silently, never link a record to itself, and keep weights in 0..1.
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 5.8, 5.9, 5.10_
 
-  - [ ] 15.5 Wire the resurrection pipeline and semantic search routes
+  - [x] 15.5 Wire the resurrection pipeline and semantic search routes
     - Replace the `routes/resurrect.py` placeholder: per record (thread pool, max 5, results kept in submitted order) recompute the decay score, call the LLM, validate, heal, compute Vitality, embed (a failure stores `embedding = null` and still completes), get edge candidates and semantic matches, then call `store_resurrection` atomically. Failed LLM stages call `store_failure` with raw data untouched. Per-record success or failure, partial success keeps successful results, all-failed gives `502 BATCH_FAILED`. Assign `sha256:` control numbers when 001 is missing. Add `POST /api/search/semantic` (Judge only, 1..1000 chars trimmed, `RETRIEVAL_QUERY`, `502 UPSTREAM_UNAVAILABLE` when embedding fails).
     - _Requirements: 3.7, 4.7, 4.10, 4.11, 4.12, 5.2-5.5, 9.2, 9.3, 9.4_
 
-  - [ ] 15.6 Write property test for the result schema
+  - [x] 15.6 Write property test for the result schema
     - **Property 11: Resurrection schema accepts exactly the valid results**
     - **Validates: Requirements 3.3, 3.4**
 
-  - [ ] 15.7 Write property test for the OpenRouter attempt flow
+  - [x] 15.7 Write property test for the OpenRouter attempt flow
     - **Property 12: OpenRouter attempt flow** (mocked with `respx`)
     - **Validates: Requirements 3.2, 3.5, 3.6**
 
-  - [ ] 15.8 Write property tests for embedding helpers
+  - [x] 15.8 Write property tests for embedding helpers
     - **Property 14: Embedding input composition**
     - **Property 15: L2 normalization**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5, 16.7**
 
-  - [ ] 15.9 Write property tests for edge computation
+  - [x] 15.9 Write property tests for edge computation
     - **Property 18: Edge computation matches the specification**
     - **Property 19: Edge canonicalization and uniqueness**
     - **Validates: Requirements 5.1-5.5, 5.8, 5.9, 5.10**
 
-  - [ ] 15.10 Write route-level property tests for batches and similarity
+  - [x] 15.10 Write route-level property tests for batches and similarity
     - **Property 27: Batch independence and order**
     - **Property 16: Similarity result contract** (a Guest gets 401 with no Gemini call, invalid queries get 400 with no Gemini call)
     - **Validates: Requirements 4.8, 4.10-4.12, 9.2-9.6**
 
-  - [ ] 15.11 Write static checks for forbidden dependencies
+  - [x] 15.11 Write static checks for forbidden dependencies
     - Assert no `torch`, `tensorflow`, `transformers`, `sentence_transformers`, or `ollama` import anywhere under `backend/`, and that the OpenRouter and Gemini clients read keys from `Settings` only.
     - _Requirements: 3.8, 3.9, 4.13, 17.13_
 
 - [ ] 16. Checkpoint - Phase 6 complete
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 17. Phase 7: Seed pipeline
-  - [ ] 17.1 Implement the synthetic corruption generator
+- [x] 17. Phase 7: Seed pipeline
+  - [x] 17.1 Implement the synthetic corruption generator
     - `backend/scripts/seed/synthetic.py`: seeded and deterministic, 20 records with 4 each of missing 520, missing 650, invalid 008, MARC-8 mojibake, and truncated field content with valid ISO 2709 framing (byte-truncation stays a test fixture only).
     - _Requirements: 15.5, 15.9_
 
-  - [ ] 17.2 Implement the Project Gutenberg and Library of Congress SRU sources
+  - [x] 17.2 Implement the Project Gutenberg and Library of Congress SRU sources
     - `backend/scripts/seed/sources.py`: httpx fetchers driven by `GUTENBERG_MARC_URL_TEMPLATE` and `LOC_SRU_URL`, MARCXML to ISO 2709 conversion, a configurable wait (`SEED_WAIT_SECONDS`) between consecutive calls, and a shortfall warning naming the source and the missing count.
     - _Requirements: 15.1, 15.3, 15.4, 15.8_
 
-  - [ ] 17.3 Implement the seed entry point and summary report
+  - [x] 17.3 Implement the seed entry point and summary report
     - `backend/scripts/seed/__main__.py` and `report.py`, run as `python -m backend.scripts.seed` only (no web entry point). Reuse the resurrection pipeline, skip existing `(source, control_number)` pairs without modifying them, log per-record failures with source and 001 and set status `failed`, then continue. Print per-source and total counts of created, skipped, and failed records, plus the elapsed seconds. All values come from Config.
     - _Requirements: 15.1, 15.2, 15.4, 15.6, 15.7, 15.10_
 
-  - [ ] 17.4 Write property test for the synthetic generator
+  - [x] 17.4 Write property test for the synthetic generator
     - **Property 34: Synthetic corruption generator**
     - **Validates: Requirements 15.5, 15.9**
 
-  - [ ] 17.5 Write seed script unit tests with mocked sources
+  - [x] 17.5 Write seed script unit tests with mocked sources
     - Check the 20/20/20 composition, idempotent re-run, failure continuation, shortfall warning, summary format, the inter-call wait with a fake clock, and that no web route starts the seed.
     - _Requirements: 15.1-15.4, 15.6, 15.7, 15.8, 15.10_
 
 - [ ] 18. Checkpoint - Phase 7 complete
   - Ensure all tests pass, ask the user if questions arise. Run the seed script against Supabase manually only after the user confirms.
 
-- [ ] 19. Phase 8a: Frontend foundation
-  - [ ] 19.1 Scaffold the Astro project with the Dark-Academia theme
+- [x] 19. Phase 8a: Frontend foundation
+  - [x] 19.1 Scaffold the Astro project with the Dark-Academia theme
     - `frontend/` with Astro `output: 'static'`, `base` and API URL read from `PUBLIC_BASE_PATH` and `PUBLIC_API_URL` (build fails if missing, no hardcoded copies elsewhere), TailwindCSS tokens (`ink`, `parchment`, `gold`, `phosphor`, `decay-red`, `ai-violet`), self-hosted fonts including an Arabic font, and a `frontend/.env.example`. Build output goes to `dist/`. No Supabase URL or key anywhere.
     - _Requirements: 6.9, 11.11, 11.12, 14.5, 17.5, 17.6_
 
-  - [ ] 19.2 Implement i18n, language toggle, and RTL
+  - [x] 19.2 Implement i18n, language toggle, and RTL
     - `src/i18n/en.json`, `ar.json` (identical key sets), `i18n.ts` (`t()` falls back to English, then to the key, and `resolveLang` accepts only `en` or `ar`), a toggle that sets `lang`/`dir`, persists to `localStorage`, and re-renders without a reload. Use logical Tailwind utilities only, force `dir="ltr"` for MARC text, and `dir="auto"` for record content.
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8, 14.9, 14.10, 14.11_
 
-  - [ ] 19.3 Implement the API client and auth state modules
+  - [x] 19.3 Implement the API client and auth state modules
     - `src/lib/api.ts` as the only `fetch` caller (prefix from `PUBLIC_API_URL`, bearer header for protected calls, on 401 clears the token and dispatches `auth:expired`, maps `error.code` to i18n keys) and `src/lib/auth.ts` (token only in `sessionStorage`, `auth:changed` events, logout).
     - _Requirements: 6.9, 13.5, 13.12, 13.13_
 
-  - [ ] 19.4 Build the app shell and archive page
+  - [x] 19.4 Build the app shell and archive page
     - Header (Judge Login button, language toggle, logout), landing page with `SearchBar`, `FilterPanel` (title, author, era, topic), `RecordList`, `Pager` against `GET /records`, and a Judge-login prompt where the semantic search would be shown to a Guest.
     - _Requirements: 8.1, 8.2, 8.3, 12.10, 13.1_
 
-  - [ ] 19.5 Write tests for i18n
+  - [x] 19.5 Write tests for i18n
     - **Property 33: i18n key parity and fallback** (fast-check) and `scripts/check-i18n.mjs` for key-set parity.
     - **Validates: Requirements 14.9, 14.10, 14.11**
 
-- [ ] 20. Phase 8b: Resurrection Chamber
-  - [ ] 20.1 Implement the Terminal_Panel
+- [x] 20. Phase 8b: Resurrection Chamber
+  - [x] 20.1 Implement the Terminal_Panel
     - `TerminalPanel` renders `=LDR`, `=008`, `=245 10$a...` lines in green phosphor monospace with `dir="ltr"`. A pure `markDecay(fields, breakdown)` marks contributing lines with a red indicator and a text label naming the rule, and inserts red "missing" lines for an absent 520 or 650 in tag order. AI-written values show an "AI" label with a distinct style.
     - _Requirements: 11.3, 11.4, 11.5, 11.7, 11.12, 14.6_
 
-  - [ ] 20.2 Implement the Resurrected_Card and export buttons
+  - [x] 20.2 Implement the Resurrected_Card and export buttons
     - `ResurrectedCard`, `DecayBreakdown`, and `ExportButtons`: healed summary, subject badges, Vitality meter, Decay_Score with a name-and-points list, and three export links (`mrc`, `marcxml`, `jsonld`). Add a pending state (progress indicator immediately, `aria-busy`, exports disabled) and a failure state (localized error, raw record stays visible, retry that re-sends the payload, abort after `PUBLIC_RESURRECT_TIMEOUT_MS`, default 120000).
     - _Requirements: 11.6, 11.7, 11.8, 11.9, 11.10_
 
-  - [ ] 20.3 Build the chamber page
+  - [x] 20.3 Build the chamber page
     - `/chamber/?id=<uuid>` with a split grid (`md:grid-cols-2`, stacked below 768 px, no horizontal scroll), `SimilarList` using `/records/{id}/similar`, and 400/404 states.
     - _Requirements: 8.6, 11.1, 11.2_
 
-  - [ ] 20.4 Write chamber unit and layout tests
+  - [x] 20.4 Write chamber unit and layout tests
     - Vitest tests for `markDecay`, a contrast calculator over the theme token pairs (4.5:1 body, 3:1 large text and boundaries), pending and failure states, and Playwright checks at 1280 px and 375 px (split versus stacked, no horizontal scroll, RTL mirroring, axe scan).
     - _Requirements: 11.1, 11.2, 11.4, 11.9, 11.10, 11.12, 14.4_
 
-- [ ] 21. Phase 8c: Knowledge Graph and search
-  - [ ] 21.1 Implement the graph canvas, filtering, and legend
+- [x] 21. Phase 8c: Knowledge Graph and search
+  - [x] 21.1 Implement the graph canvas, filtering, and legend
     - `GraphCanvas` (Cytoscape with `cose` layout run once, zoom 0.1..5, three distinct node kinds, distinct Edge_Type styles), pure `filterGraph(elements, filters)` with client-side-only filtering and batched visibility updates, and `Legend` for every node kind and Edge_Type.
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.9_
 
-  - [ ] 21.2 Build the graph page
+  - [x] 21.2 Build the graph page
     - `/graph/` loads `GET /graph` once, wires the search box and filters, shows an empty-result message with a "clear filters" control that keeps entered values, navigates to the chamber when a book node is selected, and highlights a selected author or subject node and its neighbours without navigating.
     - _Requirements: 12.6, 12.7, 12.8_
 
-  - [ ] 21.3 Write property test for graph filtering
+  - [x] 21.3 Write property test for graph filtering
     - **Property 21: Graph filtering** (fast-check, at least 100 runs)
     - **Validates: Requirements 12.4, 12.5**
 
 - [ ] 22. Phase 8d: Judge portal
-  - [ ] 22.1 Implement the login modal with a focus trap
+  - [x] 22.1 Implement the login modal with a focus trap
     - `LoginModal` using `role="dialog"`, `aria-modal`, and `inert` on the page. Focus moves to the username field on open, Tab and Shift+Tab are trapped, Escape or close discards the values and returns focus to the Judge Login button. 200 stores the token and unlocks features within 500 ms. 401 keeps the modal open, clears the password, and keeps the username. 429 shows the wait from `Retry-After` and disables submit with a countdown.
     - _Requirements: 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
 
-  - [ ] 22.2 Implement the uploader, Sample Tomb, and summon page
+  - [-] 22.2 Implement the uploader, Sample Tomb, and summon page
     - `/summon/` with `validateUpload` (`.mrc` case-insensitive, size limit, at most 5 records, rejected before any request, with limit messages), the upload then resurrect flow, the "Summon & Resurrect Sample Tomb" action (fetches `/samples/tomb` then posts to `/resurrect`), result display in the chamber, locked states in Guest mode, and session-expired handling.
     - _Requirements: 13.8, 13.9, 13.10, 13.11, 13.12, 13.13, 13.14_
 
-  - [ ] 22.3 Implement the semantic search box
+  - [x] 22.3 Implement the semantic search box
     - Judge-only `SemanticSearchBox` on the graph and archive pages calling `POST /search/semantic`, with 1..1000 character validation and localized errors. Guests see the Judge login prompt instead.
     - _Requirements: 4.10, 4.11, 4.12, 12.10, 13.5_
 

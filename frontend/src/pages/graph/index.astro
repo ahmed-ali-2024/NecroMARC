@@ -1,0 +1,124 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import GraphCanvas from '../../components/GraphCanvas.astro';
+import Legend from '../../components/Legend.astro';
+import SemanticSearch from '../../components/SemanticSearch.astro';
+import { EDGE_TYPES, MAX_QUERY_LENGTH } from '../../lib/graph';
+---
+<BaseLayout title="NecroMARC · Graph">
+  <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto">
+    <h1 class="text-3xl mb-4" data-i18n="graphpage.title">Knowledge graph</h1>
+    <form id="graph-toolbar" class="grid gap-3 border border-gold/60 p-4 mb-4" role="search" novalidate>
+      <label class="grid gap-1">
+        <span data-i18n="graphpage.search.label">Search the graph</span>
+        <input id="gf-q" type="search" maxlength={MAX_QUERY_LENGTH} class="bg-ink border border-gold text-parchment p-2"
+          data-i18n-attr="placeholder:graphpage.search.placeholder" />
+      </label>
+      <fieldset class="grid gap-3 sm:grid-cols-2">
+        <legend class="mb-1" data-i18n="graphpage.filters">Filters</legend>
+        <label class="grid gap-1"><span data-i18n="graphpage.filter.title">Title</span>
+          <input id="gf-title" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <label class="grid gap-1"><span data-i18n="graphpage.filter.author">Author</span>
+          <input id="gf-author" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <label class="grid gap-1"><span data-i18n="graphpage.filter.year_from">Year from</span>
+          <input id="gf-year-from" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <label class="grid gap-1"><span data-i18n="graphpage.filter.year_to">Year to</span>
+          <input id="gf-year-to" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <label class="grid gap-1 sm:col-span-2"><span data-i18n="graphpage.filter.topic">Topic</span>
+          <input id="gf-topic" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+      </fieldset>
+      <fieldset class="flex flex-wrap gap-4">
+        <legend class="mb-1" data-i18n="graphpage.filter.edge_types">Edge types</legend>
+        {EDGE_TYPES.map((e) => (
+          <label class="flex items-center gap-2">
+            <input type="checkbox" name="gf-edge" value={e} />
+            <span data-i18n={`graph.edge.${e}`}>{e}</span>
+          </label>
+        ))}
+      </fieldset>
+      <p id="gf-error" role="alert" hidden class="text-decay-red"></p>
+      <div class="flex gap-2">
+        <button type="submit" class="px-4 py-2 border border-gold text-gold" data-i18n="graphpage.apply">Apply</button>
+        <button type="button" id="gf-clear" class="px-4 py-2 border border-gold text-gold" data-i18n="graphpage.clear">Clear filters</button>
+      </div>
+    </form>
+
+    <!-- MOUNT SLOT (task 22.3): the Judge-only SemanticSearch component mounts here. -->
+    <div id="semantic-search-mount" data-slot="semantic-search" class="mb-4" aria-label="Semantic search"><SemanticSearch /></div>
+
+    <GraphCanvas>
+      <Legend />
+    </GraphCanvas>
+  </main>
+</BaseLayout>
+<script>
+  import type { GraphFilters } from '../../lib/graph';
+  import { t } from '../../i18n/i18n';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const form = $<HTMLFormElement>('graph-toolbar');
+  const errorEl = $('gf-error');
+  const val = (id: string) => $<HTMLInputElement>(id).value.trim();
+  let errorKey: string | null = null;
+
+  function showError(key: string | null) {
+    errorKey = key;
+    errorEl.hidden = key === null;
+    errorEl.textContent = key ? t(key) : '';
+  }
+
+  /** Returns filters, or null when the year inputs are invalid. */
+  function readFilters(): GraphFilters | null {
+    const f: GraphFilters = {};
+    if (val('gf-q')) f.q = val('gf-q');
+    if (val('gf-title')) f.title = val('gf-title');
+    if (val('gf-author')) f.author = val('gf-author');
+    if (val('gf-topic')) f.topic = val('gf-topic');
+    for (const [id, key] of [['gf-year-from', 'yearFrom'], ['gf-year-to', 'yearTo']] as const) {
+      const raw = val(id);
+      if (raw === '') continue;
+      if (!/^-?\d+$/.test(raw)) {
+        showError('graphpage.error.year_integer');
+        return null;
+      }
+      f[key] = parseInt(raw, 10);
+    }
+    if (typeof f.yearFrom === 'number' && typeof f.yearTo === 'number' && f.yearFrom > f.yearTo) {
+      showError('graphpage.error.year_order');
+      return null;
+    }
+    const types = Array.from(
+      form.querySelectorAll<HTMLInputElement>('input[name="gf-edge"]:checked'),
+    ).map((c) => c.value);
+    if (types.length > 0) f.edgeTypes = types;
+    showError(null);
+    return f;
+  }
+
+  function dispatch() {
+    const f = readFilters();
+    if (f === null) return; // invalid input: keep entered values and previous result
+    document.dispatchEvent(new CustomEvent<GraphFilters>('graph:filters', { detail: f }));
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    dispatch();
+  });
+  // Live filtering on edits (client-side only).
+  form.addEventListener('input', dispatch);
+  form.addEventListener('change', dispatch);
+
+  // Reset inputs and show the whole graph. Entered values are kept until this fires.
+  document.addEventListener('graph:clear', () => {
+    form.reset();
+    showError(null);
+    document.dispatchEvent(new CustomEvent<GraphFilters>('graph:filters', { detail: {} }));
+  });
+  $('gf-clear').addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('graph:clear'));
+  });
+  document.addEventListener('i18n:changed', () => {
+    if (errorKey) errorEl.textContent = t(errorKey);
+  });
+</script>

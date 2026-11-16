@@ -1,0 +1,28 @@
+---
+// Shell only. Fill it with renderRecord/appendLine/showSuccess/showFailure from lib/terminal.ts.
+---
+<section class="terminal marc-text min-w-0 p-3 border border-phosphor" dir="ltr" lang="und" data-terminal-panel>
+  <h2 class="sr-only" data-i18n="terminal.title">Raw MARC record</h2>
+  <ol
+    class="terminal-log list-none m-0 p-0 text-sm"
+    role="log"
+    aria-live="polite"
+    aria-relevant="additions"
+    data-terminal-log
+    data-i18n-attr="aria-label:terminal.title"
+    aria-label="Raw MARC record"
+  ></ol>
+</section>
+<style is:global>
+  .terminal-line { padding-inline-start: 0.5rem; border-inline-start: 3px solid transparent; white-space: pre-wrap; }
+  .terminal-decay { color: var(--color-decay-red); border-inline-start-color: var(--color-decay-red); }
+  .terminal-decay-label { font-weight: 600; }
+  .terminal-failure { color: var(--color-decay-red); }
+  .terminal-success { color: var(--color-phosphor); font-weight: 600; }
+  .terminal-ai { color: var(--color-ai-violet); border: 1px solid var(--color-ai-violet); padding-inline: 0.25rem; font-style: italic; }
+  .terminal-line { animation: terminal-in 0.2s ease-out; }
+  @keyframes terminal-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .terminal-line { animation: none; }
+  }
+</style>

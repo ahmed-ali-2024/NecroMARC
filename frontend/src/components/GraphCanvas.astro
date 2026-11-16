@@ -1,0 +1,166 @@
+---
+---
+<section class="grid gap-4 md:grid-cols-[1fr_18rem]" id="graph-root">
+  <div>
+    <p id="graph-status" role="status" aria-live="polite" data-i18n="graph.loading">Loading graph…</p>
+    <div
+      id="graph-canvas"
+      role="img"
+      class="block-size-[60vh] inline-size-full border border-gold"
+      data-i18n-attr="aria-label:graph.canvas.label"
+      aria-label="Interactive knowledge graph of archive records"
+    ></div>
+    <div id="graph-empty" hidden class="p-4">
+      <p data-i18n="graph.empty">No records match your search and filters.</p>
+      <button type="button" id="graph-clear" class="px-3 py-1 border border-gold text-gold" data-i18n="graph.clear">Clear filters</button>
+    </div>
+  </div>
+  <aside class="grid gap-4 content-start">
+    <section aria-labelledby="graph-details-title" class="border border-gold p-3">
+      <h2 id="graph-details-title" class="text-lg" data-i18n="graph.details.title">Selected node</h2>
+      <div id="graph-details" aria-live="polite"></div>
+    </section>
+    <slot />
+  </aside>
+  <section aria-labelledby="graph-list-title" class="md:col-span-2">
+    <h2 id="graph-list-title" class="text-lg" data-i18n="graph.list.title">Graph nodes (text list)</h2>
+    <ul id="graph-list" class="list-none ps-0 max-block-size-64 overflow-auto"></ul>
+  </section>
+</section>
+<script>
+  import cytoscape from 'cytoscape';
+  import { getGraph } from '../lib/api';
+  import type { GraphElements, GraphFilters, NodeData } from '../lib/graph';
+  import {
+    MIN_ZOOM,
+    MAX_ZOOM,
+    buildStylesheet,
+    filterGraph,
+    neighborIds,
+    visibleIds,
+  } from '../lib/graph';
+  import { t } from '../i18n/i18n';
+
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+  const $ = (id: string) => document.getElementById(id) as HTMLElement;
+  const statusEl = $('graph-status');
+  let elements: GraphElements | null = null;
+  let cy: cytoscape.Core | null = null;
+  let filters: GraphFilters = {};
+
+  function setStatus(key: string, params?: Record<string, string | number>) {
+    statusEl.dataset.i18n = key;
+    statusEl.textContent = t(key, params);
+  }
+
+  function renderDetails(d: NodeData | null) {
+    const box = $('graph-details');
+    box.replaceChildren();
+    const p = document.createElement('p');
+    if (!d || !elements) {
+      p.dataset.i18n = 'graph.details.none';
+      p.textContent = t('graph.details.none');
+      box.append(p);
+      return;
+    }
+    const n = neighborIds(elements, d.id).size;
+    p.textContent = `${d.label} · ${t('graph.kind.' + d.kind)} · ${t('graph.list.connected', { count: n })}`;
+    box.append(p);
+    if (d.kind === 'book' && d.recordId) {
+      const a = document.createElement('a');
+      a.href = `${base}/chamber/?id=${encodeURIComponent(d.recordId)}`;
+      a.textContent = t('graph.details.open');
+      box.append(a);
+    }
+  }
+
+  function select(d: NodeData) {
+    if (d.kind === 'book' && d.recordId) {
+      window.location.href = `${base}/chamber/?id=${encodeURIComponent(d.recordId)}`;
+      return;
+    }
+    if (!cy || !elements) return;
+    const c = cy;
+    const near = neighborIds(elements, d.id);
+    c.batch(() => {
+      c.elements().removeClass('highlighted');
+      c.getElementById(d.id).addClass('highlighted');
+      near.forEach((id) => c.getElementById(id).addClass('highlighted'));
+    });
+    renderDetails(d);
+  }
+
+  function renderList(nodes: { data: NodeData }[]) {
+    const ul = $('graph-list');
+    ul.replaceChildren(
+      ...nodes.map(({ data }) => {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'text-start';
+        b.textContent = `${data.label} (${t('graph.kind.' + data.kind)})`;
+        b.addEventListener('click', () => select(data));
+        li.append(b);
+        return li;
+      }),
+    );
+  }
+
+  function applyFilters() {
+    if (!cy || !elements) return;
+    const c = cy;
+    const f = filterGraph(elements, filters);
+    const ids = visibleIds(f);
+    c.batch(() => {
+      c.elements().forEach((el) => {
+        el.style('display', ids.has(el.id()) ? 'element' : 'none');
+      });
+    });
+    renderList(f.nodes);
+    $('graph-empty').hidden = f.nodes.length > 0;
+    setStatus('graph.status', { nodes: f.nodes.length, edges: f.edges.length });
+    document.dispatchEvent(
+      new CustomEvent('graph:filtered', { detail: { nodes: f.nodes.length, edges: f.edges.length } }),
+    );
+  }
+
+  async function init() {
+    try {
+      const res = await getGraph();
+      elements = res.elements as GraphElements;
+      cy = cytoscape({
+        container: $('graph-canvas'),
+        elements: res.elements as unknown as cytoscape.ElementsDefinition,
+        style: buildStylesheet() as unknown as cytoscape.StylesheetJson,
+        minZoom: MIN_ZOOM,
+        maxZoom: MAX_ZOOM,
+        // Layout runs once so dragged nodes keep their position.
+        layout: { name: 'cose', animate: false, numIter: 500, randomize: true } as cytoscape.LayoutOptions,
+      });
+      cy.on('tap', 'node', (ev) => select(ev.target.data() as NodeData));
+      cy.on('tap', (ev) => {
+        if (ev.target === cy) {
+          cy?.elements().removeClass('highlighted');
+          renderDetails(null);
+        }
+      });
+      renderDetails(null);
+      applyFilters();
+    } catch {
+      setStatus('graph.error');
+    }
+  }
+
+  // Filter UI (21.2) dispatches `graph:filters` with a GraphFilters detail.
+  document.addEventListener('graph:filters', (ev) => {
+    filters = (ev as CustomEvent<GraphFilters>).detail ?? {};
+    applyFilters();
+  });
+  $('graph-clear').addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('graph:clear'));
+  });
+  document.addEventListener('i18n:changed', () => {
+    if (elements) applyFilters();
+  });
+  void init();
+</script>

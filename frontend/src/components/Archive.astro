@@ -1,0 +1,272 @@
+---
+---
+<section class="ps-4 pe-4 py-6 max-w-5xl mx-auto" aria-labelledby="archive-heading">
+  <h1 id="archive-heading" class="text-4xl" data-i18n="app.name">NecroMARC</h1>
+  <p class="mb-6" data-i18n="app.tagline">Resurrect dead library records</p>
+
+  <form id="archive-form" class="grid gap-3 border border-gold/60 p-4" role="search">
+    <label class="grid gap-1">
+      <span data-i18n="archive.search.label">Search the archive</span>
+      <input id="f-q" name="q" type="search" class="bg-ink border border-gold text-parchment p-2"
+        data-i18n-attr="placeholder:archive.search.placeholder" />
+    </label>
+    <fieldset class="grid gap-3 sm:grid-cols-2">
+      <legend class="mb-1" data-i18n="archive.filters">Filters</legend>
+      <label class="grid gap-1"><span data-i18n="archive.filter.title">Title</span>
+        <input id="f-title" name="title" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+      <label class="grid gap-1"><span data-i18n="archive.filter.author">Author</span>
+        <input id="f-author" name="author" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+      <label class="grid gap-1"><span data-i18n="archive.filter.era_from">Era from (year)</span>
+        <input id="f-era-from" name="era_from" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+      <label class="grid gap-1"><span data-i18n="archive.filter.era_to">Era to (year)</span>
+        <input id="f-era-to" name="era_to" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+      <label class="grid gap-1 sm:col-span-2"><span data-i18n="archive.filter.topic">Topic</span>
+        <input id="f-topic" name="topic" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+    </fieldset>
+    <p id="form-error" role="alert" hidden class="text-decay-red"></p>
+    <div class="flex gap-2">
+      <button type="submit" class="px-4 py-2 border border-gold text-gold" data-i18n="archive.search.submit">Search</button>
+      <button type="button" id="f-clear" class="px-4 py-2 border border-gold text-gold" data-i18n="archive.filters.clear">Clear filters</button>
+    </div>
+  </form>
+
+  <div id="semantic-slot" class="mt-4 border border-ai-violet/70 p-4">
+    <p id="semantic-guest" class="flex flex-wrap items-center gap-3">
+      <span data-i18n="archive.semantic.guest">Semantic search is available to judges.</span>
+      <button type="button" id="semantic-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+    </p>
+    <p id="semantic-judge" hidden>
+      <span data-i18n="archive.semantic.judge">Semantic search is unlocked.</span>
+      <a id="semantic-link" href="#" data-i18n="archive.semantic.open">Open the graph</a>
+    </p>
+  </div>
+
+  <p id="status" role="status" aria-live="polite" class="mt-4"></p>
+  <div id="error-box" role="alert" hidden class="mt-4 border border-decay-red p-3">
+    <p id="error-text" class="text-decay-red"></p>
+    <button type="button" id="retry" class="mt-2 px-3 py-1 border border-gold text-gold" data-i18n="common.retry">Retry</button>
+  </div>
+
+  <ul id="record-list" class="mt-4 grid gap-4 list-none p-0" aria-busy="false"></ul>
+
+  <nav id="pager" class="mt-6 flex items-center justify-between" aria-label="Pagination" data-i18n-attr="aria-label:archive.pager.label" hidden>
+    <button type="button" id="prev" class="px-3 py-1 border border-gold text-gold" data-i18n="archive.pager.prev">Previous</button>
+    <span id="page-info"></span>
+    <button type="button" id="next" class="px-3 py-1 border border-gold text-gold" data-i18n="archive.pager.next">Next</button>
+  </nav>
+</section>
+<script>
+  import { listRecords, ApiError, errorKey } from '../lib/api';
+  import type { RecordSummary, RecordsQuery } from '../lib/api';
+  import { isJudge } from '../lib/auth';
+  import { t } from '../i18n/i18n';
+
+  const PAGE_SIZE = 20;
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  const form = $<HTMLFormElement>('archive-form');
+  const list = $('record-list');
+  const statusEl = $('status');
+  const errorBox = $('error-box');
+  const errorText = $('error-text');
+  const formError = $('form-error');
+  const pager = $('pager');
+  const pageInfo = $('page-info');
+  const prev = $<HTMLButtonElement>('prev');
+  const next = $<HTMLButtonElement>('next');
+
+  let page = 1;
+  let lastPage: { items: RecordSummary[]; total: number } | null = null;
+  let lastErrorKey: string | null = null;
+  let controller: AbortController | null = null;
+
+  const val = (id: string) => $<HTMLInputElement>(id).value.trim();
+
+  /** Returns a query or an i18n key describing a validation failure. */
+  function readQuery(): RecordsQuery | { errorKey: string } {
+    const q: RecordsQuery = { page, page_size: PAGE_SIZE };
+    if (val('f-q')) q.q = val('f-q');
+    if (val('f-title')) q.title = val('f-title');
+    if (val('f-author')) q.author = val('f-author');
+    if (val('f-topic')) q.topic = val('f-topic');
+    const from = val('f-era-from');
+    const to = val('f-era-to');
+    for (const [raw, key] of [[from, 'era_from'], [to, 'era_to']] as const) {
+      if (raw === '') continue;
+      if (!/^-?\d+$/.test(raw)) return { errorKey: 'archive.error.era_integer' };
+      q[key] = parseInt(raw, 10);
+    }
+    if (q.era_from !== undefined && q.era_to !== undefined && q.era_from > q.era_to) {
+      return { errorKey: 'archive.error.era_order' };
+    }
+    return q;
+  }
+
+  function card(r: RecordSummary): HTMLLIElement {
+    const li = document.createElement('li');
+    li.className = 'border border-gold/60 p-4 grid gap-2';
+    const h = document.createElement('h2');
+    h.className = 'text-xl';
+    const a = document.createElement('a');
+    a.href = `${base}/chamber/?id=${encodeURIComponent(r.id)}`;
+    a.dir = 'auto';
+    a.textContent = r.title ?? t('archive.record.untitled');
+    h.appendChild(a);
+    li.appendChild(h);
+
+    const meta = document.createElement('p');
+    const author = document.createElement('span');
+    author.dir = 'auto';
+    author.textContent = r.author ?? t('archive.record.unknown_author');
+    meta.appendChild(author);
+    if (r.year !== null) {
+      const y = document.createElement('span');
+      y.className = 'ms-3';
+      y.dir = 'ltr';
+      y.textContent = String(r.year);
+      meta.appendChild(y);
+    }
+    li.appendChild(meta);
+
+    const scores = document.createElement('div');
+    scores.className = 'flex flex-wrap items-center gap-4';
+    const decay = document.createElement('span');
+    decay.className = 'text-decay-red';
+    decay.textContent = `⚠ ${t('archive.record.decay')}: ${r.decay_score}`;
+    scores.appendChild(decay);
+    if (r.vitality_score !== null) {
+      const v = document.createElement('span');
+      v.className = 'flex items-center gap-2';
+      const label = document.createElement('span');
+      label.textContent = `${t('chamber.vitality')}: ${r.vitality_score}`;
+      const meter = document.createElement('span');
+      meter.setAttribute('role', 'meter');
+      meter.setAttribute('aria-valuemin', '0');
+      meter.setAttribute('aria-valuemax', '100');
+      meter.setAttribute('aria-valuenow', String(r.vitality_score));
+      meter.setAttribute('aria-label', t('chamber.vitality'));
+      meter.className = 'inline-block border border-gold w-24 h-2';
+      const fill = document.createElement('span');
+      fill.className = 'block h-full bg-phosphor';
+      fill.style.inlineSize = `${Math.max(0, Math.min(100, r.vitality_score))}%`;
+      meter.appendChild(fill);
+      v.append(label, meter);
+      scores.appendChild(v);
+    }
+    const st = document.createElement('span');
+    st.textContent = t(`archive.status.${r.status}`);
+    scores.appendChild(st);
+    li.appendChild(scores);
+
+    if (r.subjects.length > 0) {
+      const ul = document.createElement('ul');
+      ul.className = 'flex flex-wrap gap-2 list-none p-0 m-0';
+      for (const s of r.subjects) {
+        const sli = document.createElement('li');
+        sli.className = 'border border-gold/60 ps-2 pe-2 text-sm';
+        sli.dir = 'auto';
+        sli.textContent = s;
+        ul.appendChild(sli);
+      }
+      li.appendChild(ul);
+    }
+    return li;
+  }
+
+  function render() {
+    list.replaceChildren();
+    errorBox.hidden = lastErrorKey === null;
+    if (lastErrorKey) errorText.textContent = t(lastErrorKey);
+    if (!lastPage) {
+      pager.hidden = true;
+      return;
+    }
+    for (const r of lastPage.items) list.appendChild(card(r));
+    const pages = Math.max(1, Math.ceil(lastPage.total / PAGE_SIZE));
+    statusEl.textContent =
+      lastPage.total === 0
+        ? t('archive.empty')
+        : t('archive.count', { total: lastPage.total });
+    pager.hidden = lastPage.total === 0 && page === 1;
+    pageInfo.textContent = t('archive.pager.info', { page, pages });
+    prev.disabled = page <= 1;
+    next.disabled = page >= pages;
+  }
+
+  async function load() {
+    const q = readQuery();
+    if ('errorKey' in q) {
+      formError.hidden = false;
+      formError.textContent = t(q.errorKey);
+      return;
+    }
+    formError.hidden = true;
+    controller?.abort();
+    controller = new AbortController();
+    list.setAttribute('aria-busy', 'true');
+    statusEl.textContent = t('common.loading');
+    try {
+      const res = await listRecords(q);
+      lastPage = { items: res.items, total: res.total };
+      lastErrorKey = null;
+    } catch (e) {
+      lastPage = null;
+      statusEl.textContent = '';
+      lastErrorKey = e instanceof ApiError ? errorKey(e.code) : 'error.unknown';
+    } finally {
+      list.setAttribute('aria-busy', 'false');
+    }
+    render();
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    page = 1;
+    void load();
+  });
+  $('f-clear').addEventListener('click', () => {
+    form.reset();
+    formError.hidden = true;
+    page = 1;
+    void load();
+  });
+  $('retry').addEventListener('click', () => void load());
+  prev.addEventListener('click', () => {
+    if (page > 1) {
+      page -= 1;
+      void load();
+    }
+  });
+  next.addEventListener('click', () => {
+    page += 1;
+    void load();
+  });
+
+  const semGuest = $('semantic-guest');
+  const semJudge = $('semantic-judge');
+  const semLogin = $<HTMLButtonElement>('semantic-login');
+  ($('semantic-link') as HTMLAnchorElement).href = `${base}/graph/`;
+  function syncAuth() {
+    const judge = isJudge();
+    semGuest.hidden = judge;
+    semJudge.hidden = !judge;
+  }
+  syncAuth();
+  window.addEventListener('auth:changed', syncAuth);
+  window.addEventListener('auth:expired', syncAuth);
+  semLogin.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('login:open', { detail: { opener: semLogin } }));
+  });
+
+  // Dynamic text is built from t(); rebuild it when the language changes.
+  document.addEventListener('i18n:changed', () => {
+    if (!formError.hidden) {
+      const q = readQuery();
+      if ('errorKey' in q) formError.textContent = t(q.errorKey);
+    }
+    render();
+  });
+
+  void load();
+</script>

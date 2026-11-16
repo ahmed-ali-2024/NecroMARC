@@ -1,0 +1,148 @@
+---
+import { MAX_SEMANTIC_QUERY } from '../lib/semantic';
+---
+<section id="semantic-search" class="border border-ai-violet/70 p-4 grid gap-3" aria-labelledby="ss-title">
+  <h2 id="ss-title" class="text-xl" data-i18n="semantic.title">Semantic search</h2>
+  <div id="ss-guest" class="flex flex-wrap items-center gap-3" hidden>
+    <span data-i18n="semantic.guest">Semantic search is available to judges.</span>
+    <button type="button" id="ss-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+  </div>
+  <form id="ss-form" class="grid gap-2" novalidate hidden>
+    <label class="grid gap-1">
+      <span data-i18n="semantic.label">Describe what you are looking for</span>
+      <textarea id="ss-q" rows="2" dir="auto" class="bg-ink border border-gold text-parchment p-2" data-max={MAX_SEMANTIC_QUERY}></textarea>
+    </label>
+    <p id="ss-error" role="alert" hidden class="text-decay-red"></p>
+    <div class="flex items-center gap-3">
+      <button type="submit" id="ss-submit" class="px-4 py-2 border border-gold text-gold" data-i18n="semantic.submit">Search</button>
+      <button type="button" id="ss-relogin" hidden class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+    </div>
+    <p id="ss-status" role="status" hidden></p>
+    <ul id="ss-results" class="grid gap-2"></ul>
+  </form>
+</section>
+<script>
+  import { semanticSearch } from '../lib/api';
+  import type { ScoredSummary } from '../lib/api';
+  import { isJudge } from '../lib/auth';
+  import { t } from '../i18n/i18n';
+  import { validateSemanticQuery, semanticErrorView, formatSimilarity, chamberHref } from '../lib/semantic';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const base = import.meta.env.BASE_URL;
+  const guest = $('ss-guest');
+  const form = $<HTMLFormElement>('ss-form');
+  const input = $<HTMLTextAreaElement>('ss-q');
+  const errorEl = $('ss-error');
+  const statusEl = $('ss-status');
+  const list = $('ss-results');
+  const loginBtn = $<HTMLButtonElement>('ss-login');
+  const reloginBtn = $<HTMLButtonElement>('ss-relogin');
+  const submit = $<HTMLButtonElement>('ss-submit');
+
+  type View =
+    | { kind: 'idle' }
+    | { kind: 'loading' }
+    | { kind: 'empty' }
+    | { kind: 'results'; items: ScoredSummary[] }
+    | { kind: 'error'; key: string; params?: Record<string, number>; expired: boolean };
+  let view: View = { kind: 'idle' };
+  let validationKey: string | null = null;
+  let controller: AbortController | null = null;
+
+  function render() {
+    errorEl.hidden = true;
+    statusEl.hidden = true;
+    reloginBtn.hidden = true;
+    list.replaceChildren();
+    if (validationKey) {
+      errorEl.hidden = false;
+      errorEl.textContent = t(validationKey);
+    }
+    submit.disabled = view.kind === 'loading';
+    form.setAttribute('aria-busy', String(view.kind === 'loading'));
+    switch (view.kind) {
+      case 'loading':
+        statusEl.hidden = false;
+        statusEl.textContent = t('semantic.loading');
+        break;
+      case 'empty':
+        statusEl.hidden = false;
+        statusEl.textContent = t('semantic.empty');
+        break;
+      case 'error':
+        errorEl.hidden = false;
+        errorEl.textContent = t(view.key, view.params);
+        reloginBtn.hidden = !view.expired;
+        break;
+      case 'results':
+        for (const r of view.items) {
+          const li = document.createElement('li');
+          li.className = 'flex flex-wrap items-baseline gap-3 border border-gold/40 p-2';
+          const a = document.createElement('a');
+          a.href = chamberHref(base, r.summary.id);
+          a.dir = 'auto';
+          a.className = 'text-gold underline';
+          a.textContent = r.summary.title ?? t('archive.record.untitled');
+          const sim = document.createElement('span');
+          sim.dir = 'ltr';
+          sim.textContent = `${t('semantic.similarity')}: ${formatSimilarity(r.similarity)}`;
+          li.append(a, sim);
+          list.appendChild(li);
+        }
+        break;
+    }
+  }
+
+  function syncAuth() {
+    const judge = isJudge();
+    guest.hidden = judge;
+    form.hidden = !judge;
+    if (!judge) {
+      controller?.abort();
+      view = { kind: 'idle' };
+      validationKey = null;
+      render();
+    }
+  }
+
+  function openLogin(opener: HTMLElement) {
+    window.dispatchEvent(new CustomEvent('login:open', { detail: { opener } }));
+  }
+  loginBtn.addEventListener('click', () => openLogin(loginBtn));
+  reloginBtn.addEventListener('click', () => openLogin(reloginBtn));
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const check = validateSemanticQuery(input.value);
+    if (!check.ok) {
+      validationKey = check.errorKey;
+      view = { kind: 'idle' };
+      render();
+      return;
+    }
+    validationKey = null;
+    controller?.abort();
+    const mine = (controller = new AbortController());
+    view = { kind: 'loading' };
+    render();
+    try {
+      const res = await semanticSearch(check.query, undefined, mine.signal);
+      if (mine.signal.aborted) return;
+      view = res.results.length === 0 ? { kind: 'empty' } : { kind: 'results', items: res.results };
+    } catch (err) {
+      if (mine.signal.aborted && controller !== mine) return;
+      const v = semanticErrorView(err);
+      view = { kind: 'error', ...v };
+    }
+    render();
+  });
+
+  syncAuth();
+  window.addEventListener('auth:changed', syncAuth);
+  // The request's own 401 handler shows the session-expired message; keep the form so it stays visible.
+  window.addEventListener('auth:expired', () => {
+    guest.hidden = false;
+  });
+  document.addEventListener('i18n:changed', render);
+</script>

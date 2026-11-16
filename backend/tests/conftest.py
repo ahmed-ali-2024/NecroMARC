@@ -98,7 +98,11 @@ def _host_of(address) -> str | None:
 
 
 @pytest.fixture(autouse=True)
-def block_real_network(monkeypatch):
+def block_real_network(request, monkeypatch):
+    # Opt-out for opt-in live database tests (backend/tests/test_db_integration.py).
+    if request.node.get_closest_marker("live_db"):
+        yield
+        return
     real_connect = socket.socket.connect
     real_connect_ex = socket.socket.connect_ex
     real_getaddrinfo = socket.getaddrinfo

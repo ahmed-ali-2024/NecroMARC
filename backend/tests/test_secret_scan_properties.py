@@ -15,7 +15,9 @@ import secret_scan as ss  # noqa: E402
 
 TRIGGERS = ("sk-or-", "AIza", "eyJ")
 # Lowercase/digit/space text can contain no trigger and no secret variable name.
-safe_line = st.text(alphabet="abcdefghijklmnopqrstuvwxyz0123456789 _-.", max_size=40)
+safe_line = st.text(alphabet="abcdefghijklmnopqrstuvwxyz0123456789 _-.", max_size=40).filter(
+    lambda s: not any(t.lower() in s.lower() for t in TRIGGERS)
+)
 safe_text = st.lists(safe_line, max_size=8).map("\n".join)
 # Distinctive "secret" body that cannot look like a placeholder or a reference.
 secret_body = st.text(alphabet="QZXWJ0123456789", min_size=12, max_size=30)

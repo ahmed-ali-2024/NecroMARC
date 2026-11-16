@@ -1,0 +1,57 @@
+---
+import LanguageToggle from './LanguageToggle.astro';
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+<header class="border-b border-gold/60 ps-4 pe-4 py-3">
+  <div class="flex flex-wrap items-center gap-3">
+    <a href={`${base}/`} class="text-2xl font-semibold me-auto" data-i18n="app.name">NecroMARC</a>
+    <nav aria-label="Main" data-i18n-attr="aria-label:shell.nav.label" class="flex items-center gap-4">
+      <a href={`${base}/`} data-i18n="shell.nav.archive">Archive</a>
+      <a href={`${base}/summon/`} data-i18n="nav.summon">Summon</a>
+      <a href={`${base}/graph/`} data-i18n="nav.graph">Graph</a>
+    </nav>
+    <div class="flex items-center">
+      <button
+        type="button"
+        id="judge-login"
+        class="px-3 py-1 border border-gold text-gold"
+        data-i18n="nav.login">Judge login</button>
+      <button
+        type="button"
+        id="judge-logout"
+        hidden
+        class="px-3 py-1 border border-gold text-gold"
+        data-i18n="nav.logout">Log out</button>
+      <LanguageToggle />
+    </div>
+  </div>
+  <p id="session-expired" role="status" hidden class="mt-2 text-decay-red" data-i18n="shell.session_expired">
+    Your session expired. Please log in again.
+  </p>
+</header>
+<script>
+  import { isJudge, logout } from '../lib/auth';
+
+  const loginBtn = document.getElementById('judge-login') as HTMLButtonElement;
+  const logoutBtn = document.getElementById('judge-logout') as HTMLButtonElement;
+  const expired = document.getElementById('session-expired') as HTMLElement;
+
+  function sync() {
+    const judge = isJudge();
+    loginBtn.hidden = judge;
+    logoutBtn.hidden = !judge;
+    if (judge) expired.hidden = true;
+  }
+  sync();
+  window.addEventListener('auth:changed', sync);
+  window.addEventListener('auth:expired', () => {
+    sync();
+    expired.hidden = false;
+  });
+  // The login modal (separate component) listens for this event and receives the opener
+  // so it can return focus to it on close (Req 13.4).
+  loginBtn.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('login:open', { detail: { opener: loginBtn } }));
+  });
+  logoutBtn.addEventListener('click', () => logout());
+</script>

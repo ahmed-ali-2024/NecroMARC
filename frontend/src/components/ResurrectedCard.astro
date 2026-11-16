@@ -1,0 +1,23 @@
+---
+// Shell only. Fill it with renderCard/runResurrection from lib/card.ts.
+---
+<section
+  class="resurrected-card min-w-0 p-4 border border-gold"
+  data-resurrected-card
+  aria-live="polite"
+>
+  <p class="card-placeholder" data-i18n="card.placeholder">The resurrected card appears here.</p>
+</section>
+<style is:global>
+  .resurrected-card { background: var(--color-ink); color: var(--color-parchment); overflow-wrap: anywhere; }
+  .card-title, .card-heading { color: var(--color-gold); }
+  .card-subjects, .card-decay-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .card-badge { border: 1px solid var(--color-gold); padding-inline: 0.5rem; }
+  .card-ai { color: var(--color-ai-violet); border: 1px solid var(--color-ai-violet); padding-inline: 0.25rem; font-style: italic; }
+  .card-meter-track { block-size: 0.75rem; border: 1px solid var(--color-gold); }
+  .card-meter-fill { block-size: 100%; background: var(--color-phosphor); }
+  .card-export-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .card-export-link { border: 1px solid var(--color-gold); padding: 0.25rem 0.75rem; color: var(--color-gold); }
+  .card-export-link[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
+  .card-error, .card-export-error { color: var(--color-decay-red); }
+</style>

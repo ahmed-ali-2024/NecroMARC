@@ -1,0 +1,31 @@
+---
+import { NODE_KINDS, EDGE_TYPES, NODE_STYLE, EDGE_STYLE } from '../lib/graph';
+const dash = { solid: 'none', dashed: '6 3', dotted: '2 3' } as const;
+---
+<section aria-labelledby="graph-legend-title" class="border border-gold p-3">
+  <h2 id="graph-legend-title" class="text-lg" data-i18n="graph.legend.title">Legend</h2>
+  <h3 class="text-base mt-2" data-i18n="graph.legend.nodes">Node kinds</h3>
+  <ul class="list-none ps-0">
+    {NODE_KINDS.map((k) => (
+      <li class="flex items-center gap-2" data-legend-kind={k}>
+        <span
+          aria-hidden="true"
+          class="inline-block inline-size-4 block-size-4"
+          style={`background:${NODE_STYLE[k].color};` + (k === 'book' ? 'border-radius:50%;' : k === 'author' ? 'transform:rotate(45deg) scale(0.8);' : 'clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);')}
+        ></span>
+        <span data-i18n={`graph.kind.${k}`}>{k}</span>
+      </li>
+    ))}
+  </ul>
+  <h3 class="text-base mt-2" data-i18n="graph.legend.edges">Edge types</h3>
+  <ul class="list-none ps-0">
+    {EDGE_TYPES.map((t) => (
+      <li class="flex items-center gap-2" data-legend-edge={t}>
+        <svg aria-hidden="true" width="32" height="8" viewBox="0 0 32 8">
+          <line x1="0" y1="4" x2="32" y2="4" stroke={EDGE_STYLE[t].color} stroke-width="2" stroke-dasharray={dash[EDGE_STYLE[t].line]} />
+        </svg>
+        <span data-i18n={`graph.edge.${t}`}>{t}</span>
+      </li>
+    ))}
+  </ul>
+</section>

@@ -45,6 +45,14 @@ class Settings:
     similarity_threshold: float
     semantic_edge_max: int
     trust_forwarded_for: bool
+    # Seed script only (Req 15.3, 15.4); optional with defaults.
+    seed_wait_seconds: float = 3.0
+    seed_quota_gutenberg: int = 20
+    seed_quota_loc: int = 20
+    seed_quota_synthetic: int = 20
+    synthetic_seed: int = 0
+    gutenberg_marc_url_template: str = "https://www.gutenberg.org/ebooks/{id}.marc"
+    loc_sru_url: str = "http://lx2.loc.gov:210/LCDB"
 
     def secret_values(self) -> Tuple[str, ...]:
         return tuple(getattr(self, n) for n in _SECRET_FIELDS if getattr(self, n))
@@ -142,6 +150,23 @@ def load_settings(env: Mapping[str, str]) -> Settings:
 
     trust_xff = text("TRUST_FORWARDED_FOR").lower() == "true"
 
+    seed_wait = 3.0
+    raw_wait = text("SEED_WAIT_SECONDS")
+    if raw_wait:
+        try:
+            seed_wait = float(raw_wait)
+            if not (0 <= seed_wait <= 3600):  # also rejects NaN
+                raise ValueError
+        except ValueError:
+            problems.append("SEED_WAIT_SECONDS: must be a number in [0, 3600]")
+            seed_wait = 3.0
+    quota_gut = integer("SEED_QUOTA_GUTENBERG", 20, 0, 1000)
+    quota_loc = integer("SEED_QUOTA_LOC", 20, 0, 1000)
+    quota_syn = integer("SEED_QUOTA_SYNTHETIC", 20, 0, 20)
+    syn_seed = integer("SYNTHETIC_SEED", 0, 0)
+    gut_template = text("GUTENBERG_MARC_URL_TEMPLATE") or "https://www.gutenberg.org/ebooks/{id}.marc"
+    loc_url = text("LOC_SRU_URL") or "http://lx2.loc.gov:210/LCDB"
+
     if problems:
         raise ConfigError(problems)
 
@@ -168,4 +193,11 @@ def load_settings(env: Mapping[str, str]) -> Settings:
         similarity_threshold=threshold,
         semantic_edge_max=edge_max,
         trust_forwarded_for=trust_xff,
+        seed_wait_seconds=seed_wait,
+        seed_quota_gutenberg=quota_gut,
+        seed_quota_loc=quota_loc,
+        seed_quota_synthetic=quota_syn,
+        synthetic_seed=syn_seed,
+        gutenberg_marc_url_template=gut_template,
+        loc_sru_url=loc_url,
     )

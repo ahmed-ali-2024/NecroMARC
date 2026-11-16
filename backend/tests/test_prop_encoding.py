@@ -100,6 +100,11 @@ def test_decode_never_raises(data, declared):
 @given(text=_latin1_text, bad=st.integers(0x80, 0x9F))
 def test_parser_returns_record_with_undecodable_anomaly(text, bad):
     body = b"  \x1fa" + text.encode("latin-1") + bytes([bad])
+    try:
+        body.decode("utf-8")
+        return  # e.g. b"\xc2\x80" is valid UTF-8, so nothing is undecodable
+    except UnicodeDecodeError:
+        pass
     raw = _raw_record("a", [("001", b"id"), ("245", body)])
     result = parse_iso2709(raw)
     assert len(result.records) == 1

@@ -27,20 +27,26 @@ def declared_encoding(leader: str | None) -> str | None:
 
 
 def _marc8_decode(data: bytes) -> str | None:
-    """Return the MARC-8 conversion, or None if it fails or looks lossy."""
-    try:
-        from pymarc import marc8
+    """Return the MARC-8 conversion, or None if it fails or looks lossy.
 
-        text = marc8.marc8_to_unicode(data, hide_utf8_warnings=True)
-    except Exception:
-        return None
-    if not isinstance(text, str) or REPLACEMENT in text:
-        return None
-    # pymarc silently drops unparseable bytes. Without escape sequences each byte
-    # yields at least one character, so a shorter result means bytes were lost.
-    if b"\x1b" not in data and len(unicodedata.normalize("NFD", text)) < len(data):
-        return None
-    return text
+    pymarc drops the 0x1F subfield delimiter, so each segment is converted
+    separately and the delimiters are restored.
+    """
+    parts: list[str] = []
+    for seg in data.split(b"\x1f"):
+        try:
+            from pymarc import marc8
+            text = marc8.marc8_to_unicode(seg, hide_utf8_warnings=True)
+        except Exception:
+            return None
+        if not isinstance(text, str) or REPLACEMENT in text:
+            return None
+        # pymarc silently drops unparseable bytes. Without escape sequences each byte
+        # yields at least one character, so a shorter result means bytes were lost.
+        if b"\x1b" not in seg and len(unicodedata.normalize("NFD", text)) < len(seg):
+            return None
+        parts.append(text)
+    return "\x1f".join(parts)
 
 
 def _latin1_decode(data: bytes) -> tuple[str, bool]:

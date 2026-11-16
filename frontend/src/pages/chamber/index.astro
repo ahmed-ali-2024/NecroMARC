@@ -1,0 +1,226 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TerminalPanel from '../../components/TerminalPanel.astro';
+import ResurrectedCard from '../../components/ResurrectedCard.astro';
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+---
+<BaseLayout title="NecroMARC · Chamber">
+  <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto min-w-0">
+    <p class="mb-2"><a id="chamber-back" href={`${base}/`} data-i18n="chamber.back">Back to the archive</a></p>
+    <h1 id="chamber-title" class="text-3xl mb-4" dir="auto" data-i18n="chamber.title">Chamber</h1>
+    <p id="chamber-status" role="status" aria-live="polite" data-i18n="common.loading">Loading…</p>
+    <div id="chamber-error" role="alert" hidden class="grid gap-2 justify-start text-decay-red">
+      <p id="chamber-error-text"></p>
+      <button type="button" id="chamber-retry" hidden class="px-3 py-1 border border-gold text-gold" data-i18n="common.retry">Retry</button>
+    </div>
+
+    <div id="chamber-body" hidden>
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 min-w-0">
+        <TerminalPanel />
+        <div class="grid gap-3 content-start min-w-0">
+          <ResurrectedCard />
+          <div id="chamber-actions" hidden class="grid gap-2 justify-start">
+            <button type="button" id="chamber-resurrect" hidden class="px-4 py-2 border border-gold text-gold" data-i18n="chamber.resurrect">Resurrect</button>
+            <div id="chamber-guest" hidden class="grid gap-2 justify-start">
+              <p data-i18n="chamber.login_prompt">Log in as a judge to resurrect this record.</p>
+              <button type="button" id="chamber-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <section aria-labelledby="chamber-similar-title" class="mt-6 min-w-0">
+        <h2 id="chamber-similar-title" class="text-xl mb-2" data-i18n="chamber.similar.title">Similar records</h2>
+        <p id="chamber-similar-status" role="status" class="mb-2"></p>
+        <ul id="chamber-similar" class="list-none ps-0 grid gap-2"></ul>
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+<script>
+  import { ApiError, errorKey, getRecord, getSimilar, resurrect, resurrectTimeoutMs } from '../../lib/api';
+  import type { RecordDetail, ScoredSummary } from '../../lib/api';
+  import { isJudge } from '../../lib/auth';
+  import { buildCardModel, renderCard, runResurrection } from '../../lib/card';
+  import { appendLine, renderRecord, showFailure, showSuccess } from '../../lib/terminal';
+  import { t } from '../../i18n/i18n';
+
+  const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  const statusEl = $('chamber-status');
+  const errorBox = $('chamber-error');
+  const errorText = $('chamber-error-text');
+  const retryBtn = $<HTMLButtonElement>('chamber-retry');
+  const body = $('chamber-body');
+  const titleEl = $('chamber-title');
+  const log = document.querySelector<HTMLElement>('[data-terminal-log]') as HTMLElement;
+  const card = document.querySelector<HTMLElement>('[data-resurrected-card]') as HTMLElement;
+  const actions = $('chamber-actions');
+  const resBtn = $<HTMLButtonElement>('chamber-resurrect');
+  const guest = $('chamber-guest');
+  const loginBtn = $<HTMLButtonElement>('chamber-login');
+  const similarStatus = $('chamber-similar-status');
+  const similarList = $('chamber-similar');
+
+  let detail: RecordDetail | null = null;
+  let errKey: string | null = null;
+  let similarKey: string | null = null;
+  let similar: ScoredSummary[] = [];
+  let busy = false;
+
+  const id = new URLSearchParams(window.location.search).get('id');
+
+  function showError(key: string, retry: boolean) {
+    errKey = key;
+    statusEl.hidden = true;
+    body.hidden = true;
+    errorBox.hidden = false;
+    errorText.textContent = t(key);
+    retryBtn.hidden = !retry;
+  }
+
+  function setSimilarStatus(key: string | null) {
+    similarKey = key;
+    similarStatus.hidden = key === null;
+    similarStatus.textContent = key ? t(key) : '';
+  }
+
+  function renderSimilar() {
+    similarList.replaceChildren(
+      ...similar.map((s) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `${base}/chamber/?id=${encodeURIComponent(s.summary.id)}`;
+        a.dir = 'auto';
+        a.textContent = s.summary.title ?? t('archive.record.untitled');
+        const score = document.createElement('span');
+        score.className = 'ms-2';
+        score.textContent = t('chamber.similar.score', { score: Math.round(s.similarity * 100) });
+        li.append(a, score);
+        return li;
+      }),
+    );
+  }
+
+  async function loadSimilar(recordId: string) {
+    setSimilarStatus('common.loading');
+    similar = [];
+    renderSimilar();
+    try {
+      const res = await getSimilar(recordId);
+      if (!res.has_embedding) {
+        setSimilarStatus('chamber.similar.no_embedding');
+      } else if (res.results.length === 0) {
+        setSimilarStatus('chamber.similar.empty');
+      } else {
+        similar = res.results;
+        renderSimilar();
+        setSimilarStatus(null);
+      }
+    } catch {
+      setSimilarStatus('chamber.similar.error');
+    }
+  }
+
+  function syncActions() {
+    const decayed = detail?.status === 'decayed';
+    actions.hidden = !decayed;
+    if (!decayed) return;
+    const judge = isJudge();
+    resBtn.hidden = !judge;
+    guest.hidden = judge;
+    resBtn.disabled = busy;
+  }
+
+  function renderCardArea() {
+    if (!detail) return;
+    const model = buildCardModel(detail);
+    if (model) renderCard(card, model);
+  }
+
+  function renderDetail(d: RecordDetail) {
+    detail = d;
+    titleEl.removeAttribute('data-i18n');
+    titleEl.textContent = d.summary.title ?? t('archive.record.untitled');
+    document.title = `NecroMARC · ${titleEl.textContent}`;
+    renderRecord(log, d.raw, d.decay.breakdown);
+    if (d.status === 'resurrected') {
+      showSuccess(log);
+      renderCardArea();
+    }
+    syncActions();
+    statusEl.hidden = true;
+    errorBox.hidden = true;
+    body.hidden = false;
+  }
+
+  function onResurrect() {
+    if (!detail || busy) return;
+    busy = true;
+    syncActions();
+    appendLine(log, t('card.pending'));
+    runResurrection(
+      card,
+      [detail.raw],
+      (records, signal) => resurrect(records, signal),
+      {
+        onSuccess(d) {
+          busy = false;
+          detail = d;
+          showSuccess(log);
+          renderCardArea();
+          syncActions();
+        },
+        onFailure() {
+          busy = false;
+          showFailure(log);
+          syncActions();
+        },
+      },
+      resurrectTimeoutMs(),
+    );
+  }
+
+  async function load() {
+    errorBox.hidden = true;
+    if (!id || !UUID.test(id)) {
+      showError('chamber.invalid_id', false);
+      return;
+    }
+    statusEl.hidden = false;
+    statusEl.dataset.i18n = 'common.loading';
+    statusEl.textContent = t('common.loading');
+    try {
+      renderDetail(await getRecord(id));
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) showError('chamber.not_found', false);
+      else if (e instanceof ApiError && (e.status === 400 || e.status === 422)) showError('chamber.invalid_id', false);
+      else showError(e instanceof ApiError ? errorKey(e.code) : 'error.unknown', true);
+      return;
+    }
+    void loadSimilar(id);
+  }
+
+  resBtn.addEventListener('click', onResurrect);
+  loginBtn.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('login:open', { detail: { opener: loginBtn } }));
+  });
+  retryBtn.addEventListener('click', () => void load());
+  window.addEventListener('auth:changed', syncActions);
+  window.addEventListener('auth:expired', syncActions);
+  document.addEventListener('i18n:changed', () => {
+    if (errKey && !errorBox.hidden) errorText.textContent = t(errKey);
+    if (similarKey) similarStatus.textContent = t(similarKey);
+    if (detail && !body.hidden) {
+      if (!busy) {
+        renderRecord(log, detail.raw, detail.decay.breakdown);
+        if (detail.status === 'resurrected') showSuccess(log);
+        if (detail.resurrection) renderCardArea();
+      }
+      renderSimilar();
+    }
+  });
+  void load();
+</script>
