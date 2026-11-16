@@ -1,0 +1,14 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Run parser tests on save",
+      "trigger": "PostFileSave",
+      "matcher": "^backend/parser/.*",
+      "action": {
+        "type": "command",
+        "command": "bash scripts/run_parser_tests.sh"
+      }
+    }
+  ]
+}

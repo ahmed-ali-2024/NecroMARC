@@ -1,0 +1,21 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+venv/
+.venv/
+.pytest_cache/
+.hypothesis/
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+
+# OS
+Thumbs.db
+# Kiro hook run log (generated)
+.kiro/hooks/last-run.log
