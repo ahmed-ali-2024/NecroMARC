@@ -375,12 +375,12 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - **Property 21: Graph filtering** (fast-check, at least 100 runs)
     - **Validates: Requirements 12.4, 12.5**
 
-- [ ] 22. Phase 8d: Judge portal
+- [x] 22. Phase 8d: Judge portal
   - [x] 22.1 Implement the login modal with a focus trap
     - `LoginModal` using `role="dialog"`, `aria-modal`, and `inert` on the page. Focus moves to the username field on open, Tab and Shift+Tab are trapped, Escape or close discards the values and returns focus to the Judge Login button. 200 stores the token and unlocks features within 500 ms. 401 keeps the modal open, clears the password, and keeps the username. 429 shows the wait from `Retry-After` and disables submit with a countdown.
     - _Requirements: 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
 
-  - [-] 22.2 Implement the uploader, Sample Tomb, and summon page
+  - [x] 22.2 Implement the uploader, Sample Tomb, and summon page
     - `/summon/` with `validateUpload` (`.mrc` case-insensitive, size limit, at most 5 records, rejected before any request, with limit messages), the upload then resurrect flow, the "Summon & Resurrect Sample Tomb" action (fetches `/samples/tomb` then posts to `/resurrect`), result display in the chamber, locked states in Guest mode, and session-expired handling.
     - _Requirements: 13.8, 13.9, 13.10, 13.11, 13.12, 13.13, 13.14_
 
@@ -388,11 +388,11 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - Judge-only `SemanticSearchBox` on the graph and archive pages calling `POST /search/semantic`, with 1..1000 character validation and localized errors. Guests see the Judge login prompt instead.
     - _Requirements: 4.10, 4.11, 4.12, 12.10, 13.5_
 
-  - [ ] 22.4 Write property test for upload validation
+  - [x] 22.4 Write property test for upload validation
     - **Property 35: Upload file validation** (fast-check)
     - **Validates: Requirements 13.9, 13.10, 13.11**
 
-  - [ ] 22.5 Write component tests and the bundle secret gate
+  - [x] 22.5 Write component tests and the bundle secret gate
     - Testing Library tests for the login modal (focus, trap, Escape, 401, 429), logout, and expiry. Add a `scripts/check-bundle.mjs` gate that fails when `dist/` contains `supabase`, `eyJ`, `sk-or-`, `AIza`, or the judge credential values.
     - _Requirements: 6.9, 13.2-13.7, 13.12, 13.13, 13.14_
 
@@ -400,19 +400,19 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 24. Phase 9: Deployment and documentation
-  - [ ] 24.1 Write the cPanel deployment guide and static `.htaccess`
+  - [-] 24.1 Write the cPanel deployment guide and static `.htaccess`
     - `docs/deployment.md`: Setup Python App (Python 3.11.18, root outside `public_html`, URL `3aai.in/necromarc/api`, `passenger_wsgi.py`, `application`), `pip install --require-hashes -r requirements.txt`, environment variables set in cPanel or a `chmod 600` `.env` outside the web root, restart with `tmp/restart.txt`, upload `frontend/dist/*` to `public_html/necromarc/` without touching `api/`, upload size limit, and post-deploy smoke tests. Add `frontend/public/.htaccess` (no directory listing, caching, security headers, CSP, HTTPS redirect, dotfile denial).
     - _Requirements: 17.1, 17.5, 17.6, 17.7, 17.8_
 
-  - [ ] 24.2 Write the README
+  - [-] 24.2 Write the README
     - `README.md`: the ISO 2709 legacy-container problem, a statement that MARC 21 remains an actively maintained standard, architecture overview, setup and test commands, a hyperlink to the live site `https://3aai.in/necromarc/`, and the key-rotation note.
     - _Requirements: 18.13, 19.7_
 
-  - [ ] 24.3 Write Devpost notes on Kiro features
+  - [-] 24.3 Write Devpost notes on Kiro features
     - `docs/devpost.md`: how specs, steering, the `PostFileSave` hook, and the Supabase MCP server were used, tied to the Resurrection category. Update the steering file so the embedding model reads `gemini-embedding-001` (design decision D9).
     - _Requirements: 19.1, 19.3, 19.5, 19.6_
 
-  - [ ] 24.4 Add the CI workflow
+  - [-] 24.4 Add the CI workflow
     - `.github/workflows/ci.yml` running pytest (the `ci` profile), `scripts/check_deps.py`, `scripts/secret_scan.py`, frontend lint, tests, `check-i18n.mjs`, `astro build` with the production variables, `check-bundle.mjs`, and an assertion that `.kiro/` is not ignored.
     - _Requirements: 16.12, 17.14, 18.9, 19.1_
 

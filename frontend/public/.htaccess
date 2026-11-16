@@ -1,0 +1,44 @@
+# NecroMARC static frontend, deployed to public_html/necromarc/.
+# The api/ subdirectory holds the cPanel Passenger .htaccess and is a separate
+# file; never overwrite it when uploading dist/.
+
+Options -Indexes
+DirectoryIndex index.html
+
+# --- HTTPS redirect ---
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Deny dotfiles and dot-directories (.env, .git, ...). Keep ACME challenges.
+  RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
+  RewriteRule (^|/)\.(?!well-known) - [F,L]
+
+  # Trailing slash: every route is a real directory index (no SPA fallback).
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_URI} !/$
+  RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]
+</IfModule>
+
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+# --- Caching ---
+<IfModule mod_headers.c>
+  # Hashed build assets are immutable.
+  <If "%{REQUEST_URI} =~ m#/_astro/#">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </If>
+  # HTML must always be revalidated.
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+
+  # --- Security headers ---
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "same-origin"
+  Header always set Content-Security-Policy "default-src 'self'; connect-src 'self' https://3aai.in; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"
+</IfModule>
