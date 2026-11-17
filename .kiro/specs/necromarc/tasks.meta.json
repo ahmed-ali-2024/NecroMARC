@@ -179,6 +179,16 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837623939
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850628957
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851231682
       }
     ],
     "3.1 Define parser data models": [
@@ -495,6 +505,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837629250
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851239411
       }
     ],
     "6.1 Create the parser-test hook and wrapper script": [
@@ -553,6 +568,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837630332
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851252166
       }
     ],
     "8.1 Write extension and `marc_records` migrations": [
@@ -672,6 +692,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837632324
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851257968
       }
     ],
     "10.1 Build the app factory, middleware, and health route": [
@@ -951,6 +976,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837637400
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851263713
       }
     ],
     "15.1 Implement the Resurrection_Result schema and prompt builder": [
@@ -1145,6 +1175,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837641191
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851274527
       }
     ],
     "17.1 Implement the synthetic corruption generator": [
@@ -1237,6 +1272,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837642816
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851281324
       }
     ],
     "19.1 Scaffold the Astro project with the Dark-Academia theme": [
@@ -1533,6 +1573,11 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837648249
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851287000
       }
     ],
     "24.1 Write the cPanel deployment guide and static `.htaccess`": [
@@ -1545,6 +1590,11 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850496806
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850614338
       }
     ],
     "24.2 Write the README": [
@@ -1557,6 +1607,11 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850497885
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850615024
       }
     ],
     "24.3 Write Devpost notes on Kiro features": [
@@ -1569,6 +1624,11 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850498446
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850615598
       }
     ],
     "24.4 Add the CI workflow": [
@@ -1581,6 +1641,11 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850499511
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850616549
       }
     ],
     "25. Final checkpoint - Ensure all tests pass": [
@@ -1588,6 +1653,21 @@
         "executionId": "de68c51f-e467-4fca-8870-18cda5e72ae1",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794837649848
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851330197
+      },
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794851611290
+      },
+      {
+        "executionId": "30f79da7-9af1-4e96-8b34-c2ecd674b783",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938145704
       }
     ],
     "1. Phase 1: Repo hygiene and scaffold": [
@@ -1693,6 +1773,13 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850490994
+      }
+    ],
+    "24. Phase 9: Deployment and documentation": [
+      {
+        "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794850616912
       }
     ]
   }

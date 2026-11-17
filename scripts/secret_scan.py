@@ -13,10 +13,11 @@ import sys
 from pathlib import Path
 from typing import Callable, Iterable, NamedTuple
 
+# Needles are assembled from pieces so this file does not match its own scan.
 KEY_PATTERNS: dict[str, str] = {
-    "key-pattern:sk-or-": "sk-or-",
-    "key-pattern:AIza": "AIza",
-    "key-pattern:eyJ": "eyJ",
+    "key-pattern:sk-or" + "-": "sk-or" + "-",
+    "key-pattern:AI" + "za": "AI" + "za",
+    "key-pattern:ey" + "J": "ey" + "J",
 }
 
 SECRET_VARS: tuple[str, ...] = (

@@ -397,7 +397,7 @@ Constraints from the project constitution: no local machine learning, no hardcod
 6. THE `.gitignore` file SHALL ignore these Python and Node build artifacts: `__pycache__/`, `venv/`, `.venv/`, `node_modules/`, `dist/`, `.astro/`, `.pytest_cache/`, and `.hypothesis/`.
 7. THE `.gitignore` file SHALL contain only ASCII characters, and the operating-system entry that currently reads "Thumbs上げます" SHALL read `Thumbs.db`.
 8. THE `.gitignore` file SHALL NOT ignore `.kiro/` or any path under it.
-9. WHEN the secret-scan check is run, THE secret-scan check SHALL search every git-tracked file for the key patterns `sk-or-`, `AIza`, and `eyJ`, and for non-placeholder values assigned to the secret Config variables named in criterion 2.
+9. WHEN the secret-scan check is run, THE secret-scan check SHALL search every git-tracked file for the key patterns `sk-or[-]`, `AI[z]a`, and `ey[J]`, and for non-placeholder values assigned to the secret Config variables named in criterion 2.
 10. IF the secret-scan check finds one or more matches, THEN THE secret-scan check SHALL exit with a non-zero status, SHALL list each matching file path and line number, and SHALL NOT print the matched secret value.
 11. IF the secret-scan check finds no matches, THEN THE secret-scan check SHALL exit with status zero.
 12. THE API SHALL NOT write the value of any secret Config variable to logs or error responses.

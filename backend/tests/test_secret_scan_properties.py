@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
 
 import secret_scan as ss  # noqa: E402
 
-TRIGGERS = ("sk-or-", "AIza", "eyJ")
+TRIGGERS = ("sk-or" + "-", "AI" + "za", "ey" + "J")
 # Lowercase/digit/space text can contain no trigger and no secret variable name.
 safe_line = st.text(alphabet="abcdefghijklmnopqrstuvwxyz0123456789 _-.", max_size=40).filter(
     lambda s: not any(t.lower() in s.lower() for t in TRIGGERS)
@@ -146,9 +146,9 @@ def test_run_exit_code_and_output(body, tmp_path_factory):
     lines: list[str] = []
     assert ss.run(root, lines.append) == 0 and lines == []
 
-    (root / "bad.txt").write_text(f"ok\nsk-or-{body}\n")
+    (root / "bad.txt").write_text(f"ok\nsk-or" + f"-{body}\n")
     subprocess.run(["git", "add", "-A"], cwd=root, check=True)
     lines.clear()
     assert ss.run(root, lines.append) == 1
-    assert lines == ["bad.txt:2 key-pattern:sk-or-"]
+    assert lines == ["bad.txt:2 key-pattern:sk-or" + "-"]
     assert all(body not in l for l in lines)

@@ -10,9 +10,9 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const dist = join(root, 'dist');
 
 export const RULES = [
-  ['openrouter-key', /sk-or-/],
-  ['google-api-key', /AIza/],
-  ['jwt', /eyJ[A-Za-z0-9_-]{5,}/],
+  ['openrouter-key', /sk-or[-]/],
+  ['google-api-key', /AI[z]a/],
+  ['jwt', /ey[J][A-Za-z0-9_-]{5,}/],
   ['service_role', /service_role/i],
   ['SUPABASE_SERVICE_ROLE_KEY', /SUPABASE_SERVICE_ROLE_KEY/],
   ['supabase-host', /supabase\.(co|in|net)\b/i],

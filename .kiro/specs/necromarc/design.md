@@ -267,7 +267,7 @@ Flask is kept. `MarkupSafe` is the only dependency that is not a pure-Python whe
 4. For each installed distribution, read `*.dist-info/WHEEL`. Report it as non-pure unless `Root-Is-Purelib: true` and a tag of `py3-none-any`, except names listed in `native_allowlist.txt`, which are skipped by this step only.
 5. Print each offending package name (forbidden, unpinned, or non-allowlisted native) and exit non-zero if any were found.
 
-`scripts/secret_scan.py` runs `git ls-files`, then scans each file for `sk-or-`, `AIza`, `eyJ` and for `KEY=value` assignments to secret Config names whose value is not an obvious placeholder (`changeme`, `your-...-here`, `<...>`, empty). It also verifies that `.env.example` has every variable from Requirement 18.2. Output lists `path:line` and the rule name, never the matched text. Exit is 0 when clean.
+`scripts/secret_scan.py` runs `git ls-files`, then scans each file for `sk-or[-]`, `AI[z]a`, `ey[J]` and for `KEY=value` assignments to secret Config names whose value is not an obvious placeholder (`changeme`, `your-...-here`, `<...>`, empty). It also verifies that `.env.example` has every variable from Requirement 18.2. Output lists `path:line` and the rule name, never the matched text. Exit is 0 when clean.
 
 ## Components and Interfaces
 
@@ -1134,7 +1134,7 @@ When the uploaded record has no usable `control_number` (no 001), the API assign
 
 * Astro (static output), TailwindCSS, TypeScript, Cytoscape.js, and plain TypeScript modules for interactivity (no UI framework, to keep the bundle small on shared hosting). Fonts are self-hosted through `@fontsource` packages (no third-party CDN): a Garamond-style serif for headings, `Amiri` for Arabic glyphs, and a monospaced face for the terminal.
 * `astro.config.mjs` reads `PUBLIC_BASE_PATH` (`/necromarc`) and `PUBLIC_API_URL` (`https://3aai.in/necromarc/api`) with `loadEnv` and fails the build if either is missing. It sets `output: 'static'`, `base`, `trailingSlash: 'always'`, and `build.format: 'directory'`. No other source file contains these values (17.6). Source code builds URLs from `import.meta.env.BASE_URL` and `import.meta.env.PUBLIC_API_URL`.
-* The build writes everything to `frontend/dist/` (17.5). Nothing in the bundle references Supabase, a key, `JUDGE_USERNAME`, or `JUDGE_PASSWORD` (6.9, 13.14). CI greps `dist/` for `supabase`, `eyJ`, `sk-or-`, and `AIza` as a gate.
+* The build writes everything to `frontend/dist/` (17.5). Nothing in the bundle references Supabase, a key, `JUDGE_USERNAME`, or `JUDGE_PASSWORD` (6.9, 13.14). CI greps `dist/` for `supabase`, `ey[J]`, `sk-or[-]`, and `AI[z]a` as a gate.
 
 ### Pages and components
 
@@ -1445,7 +1445,7 @@ flowchart LR
 
 ### Property 32: Dependency and secret scanners
 
-*For any* generated `requirements.txt` content and installed package set, `check_deps` exits non-zero if and only if an entry lacks `==`, a forbidden package (ollama, torch, pytorch, tensorflow, transformers, sentence-transformers, pydantic-core) is present, or a non-allow-listed package is not a pure wheel, and its output names each offender. *For any* set of tracked file contents, `secret_scan` exits non-zero if and only if a line contains `sk-or-`, `AIza`, `eyJ`, or a non-placeholder value for a secret variable; it lists the file and line number and never prints the matched value; and it fails on a missing or non-placeholder `.env.example` variable.
+*For any* generated `requirements.txt` content and installed package set, `check_deps` exits non-zero if and only if an entry lacks `==`, a forbidden package (ollama, torch, pytorch, tensorflow, transformers, sentence-transformers, pydantic-core) is present, or a non-allow-listed package is not a pure wheel, and its output names each offender. *For any* set of tracked file contents, `secret_scan` exits non-zero if and only if a line contains `sk-or[-]`, `AI[z]a`, `ey[J]`, or a non-placeholder value for a secret variable; it lists the file and line number and never prints the matched value; and it fails on a missing or non-placeholder `.env.example` variable.
 
 **Validates: Requirements 17.14, 17.15, 18.3, 18.9, 18.10, 18.11**
 
