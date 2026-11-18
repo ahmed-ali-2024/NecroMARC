@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fc from 'fast-check';
-import { countRecords, validateRecordCount, validateUpload, MAX_BATCH_RECORDS } from './upload';
+import { validateUpload } from './upload';
 
 /**
  * Feature: necromarc, Property 35: Upload file validation
@@ -40,16 +40,6 @@ describe('Property 35: Upload file validation', () => {
         expect(bad).toEqual({ ok: false, errorKey: 'summon.error.extension' });
         const big = validateUpload({ name: s + '.mrc', size: max + 1 }, max);
         expect(big).toEqual({ ok: false, errorKey: 'summon.error.too_large' });
-      }),
-    );
-  });
-
-  it('record count validation accepts iff count <= 5, and countRecords counts 0x1D bytes', () => {
-    fc.assert(
-      fc.property(fc.uint8Array({ maxLength: 200 }), (bytes) => {
-        const n = bytes.filter((b) => b === 0x1d).length;
-        expect(countRecords(bytes)).toBe(n);
-        expect(validateRecordCount(n).ok).toBe(n <= MAX_BATCH_RECORDS);
       }),
     );
   });

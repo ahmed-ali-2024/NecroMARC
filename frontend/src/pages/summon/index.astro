@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TerminalPanel from '../../components/TerminalPanel.astro';
 import Uploader from '../../components/Uploader.astro';
+import MarcSources from '../../components/MarcSources.astro';
 ---
 <BaseLayout title="NecroMARC · Summon">
   <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto min-w-0">
@@ -10,5 +11,6 @@ import Uploader from '../../components/Uploader.astro';
       <Uploader />
       <TerminalPanel />
     </div>
+    <MarcSources />
   </main>
 </BaseLayout>

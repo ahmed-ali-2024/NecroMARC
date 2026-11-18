@@ -6,7 +6,7 @@ Live site: [https://3aai.in/necromarc/](https://3aai.in/necromarc/)
 
 ## The ISO 2709 legacy-container problem
 
-ISO 2709 is the 1970s interchange format that carries most of the world's bibliographic data. A record is a flat byte stream: a 24-byte leader, a directory of tag/length/offset entries, then variable-length fields separated by control characters (`0x1E`, `0x1F`, `0x1D`).
+ISO 2709 is the 1960s interchange format that carries most of the world's bibliographic data. A record is a flat byte stream: a 24-byte leader, a directory of tag/length/offset entries, then variable-length fields separated by control characters (`0x1E`, `0x1F`, `0x1D`).
 
 That container is fragile and hard to use today:
 
@@ -17,6 +17,16 @@ That container is fragile and hard to use today:
 NecroMARC parses these files defensively, reports decay (broken directories, encoding damage, missing fields), and rebuilds usable records.
 
 **MARC 21 itself is not dead.** It remains an actively maintained standard, published and updated by the Library of Congress. NecroMARC targets the old ISO 2709 container and the damage that accumulated in it, not the MARC 21 content model.
+
+## Uploading and selecting records
+
+- **Upload limit.** Any `.mrc` file up to 5 MB (`MAX_UPLOAD_BYTES`) can be uploaded, however many records it holds (for example `MARC-FILES-PGA/PGA-Australiana.mrc` has 278).
+- **Selection.** Resurrection is limited to a batch of at most 5 records. After the upload, the Judge picks up to 5 records from the parsed list to resurrect.
+- **About page.** `/about/` explains the project, the ISO 2709 problem, how to use the site, and links to GitHub, the Summon page, and the graph.
+- **MARC sources.** The Summon page (`/summon/#marc-sources`) lists sites with free MARC 21 records:
+  - [Project Gutenberg Australia](https://gutenberg.net.au/marc.html) (ZIP archive; unzip it first)
+  - [British Online Archives](https://britishonlinearchives.com/librarian-resources/marc-21-records) (collection list)
+  - [Open Book Publishers](https://www.openbookpublishers.com/libraries/marc-records) (availability not verified)
 
 ## Architecture
 
@@ -168,7 +178,7 @@ It fetches records from Project Gutenberg and the Library of Congress SRU servic
 
 ## Deployment and docs
 
-- [docs/deployment.md](docs/deployment.md): cPanel deployment (Passenger Python app, static frontend upload, smoke tests).
+- [docs/deployment.md](docs/deployment.md): cPanel deployment (Passenger Python app, static frontend upload, smoke tests, automatic frontend deploy over FTPS from GitHub Actions).
 - [docs/mcp.md](docs/mcp.md): Supabase MCP and optional Library of Congress SRU MCP usage.
 
 ## Kiro

@@ -1,0 +1,16 @@
+---
+import { MARC_SOURCES } from '../lib/marcSources';
+---
+<section id="marc-sources" class="border border-gold/70 p-4 grid gap-3 min-w-0 mt-4" aria-labelledby="src-title">
+  <h2 id="src-title" class="text-xl" data-i18n="sources.title">Where to find MARC files</h2>
+  <p data-i18n="sources.intro">No .mrc file at hand? These sites offer free MARC 21 records you can download and summon here.</p>
+  <ul class="grid gap-2 list-none ps-0">
+    {MARC_SOURCES.map((s) => (
+      <li class="grid gap-1 min-w-0">
+        <a href={s.url} target="_blank" rel="noopener noreferrer" class="text-gold underline break-words" data-i18n={s.nameKey} data-source={s.id}></a>
+        <span class="text-sm" data-i18n={s.noteKey}></span>
+      </li>
+    ))}
+  </ul>
+  <p class="text-sm" data-i18n="sources.tip">Tip: the file must end in .mrc and be under 5 MB. A file with many records is fine, because after upload you choose up to 5 of them.</p>
+</section>

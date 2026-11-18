@@ -387,12 +387,19 @@ class TestRateLimitHit:
         row = _call("GET", f"rate_limits?select=count&key=eq.{key}", _SERVICE).body
         assert row == [{"count": 50}]
 
-    def test_limit_blocks_and_window_resets(self, prefix):
-        key = f"{prefix}-win"
-        args = {"p_key": key, "p_limit": 2, "p_window_seconds": 2}
+    def test_limit_blocks(self, prefix):
+        # Generous window: remote round-trip latency must not expire it mid-test.
+        args = {"p_key": f"{prefix}-blk", "p_limit": 2, "p_window_seconds": 30}
         out = [rpc("rate_limit_hit", args).body[0] for _ in range(3)]
         assert [o["allowed"] for o in out] == [True, True, False]
-        assert out[2]["retry_after"] >= 1
-        time.sleep(2.3)
+        assert [o["hit_count"] for o in out] == [1, 2, 3]
+        assert 1 <= out[2]["retry_after"] <= 30
+
+    def test_window_resets(self, prefix):
+        # Latency only makes the elapsed time longer, so waiting past the window
+        # is safe regardless of round-trip time.
+        args = {"p_key": f"{prefix}-rst", "p_limit": 1, "p_window_seconds": 2}
+        assert rpc("rate_limit_hit", args).body[0]["hit_count"] == 1
+        time.sleep(2.5)
         again = rpc("rate_limit_hit", args).body[0]
         assert again["hit_count"] == 1 and again["allowed"] is True

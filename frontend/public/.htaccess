@@ -17,6 +17,8 @@ DirectoryIndex index.html
   RewriteRule (^|/)\.(?!well-known) - [F,L]
 
   # Trailing slash: every route is a real directory index (no SPA fallback).
+  # api/ is the Passenger application mount; leave it to the API.
+  RewriteCond %{REQUEST_URI} !^/necromarc/api
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteCond %{REQUEST_URI} !/$
   RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]

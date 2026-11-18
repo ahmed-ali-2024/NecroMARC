@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const GITHUB_URL = 'https://github.com/ahmed-ali-2024/NecroMARC';
+---
+<BaseLayout title="NecroMARC · About">
+  <main id="main" class="ps-4 pe-4 py-6 max-w-3xl mx-auto min-w-0 grid gap-6">
+    <h1 class="text-3xl" data-i18n="about.title">About NecroMARC</h1>
+
+    <nav aria-labelledby="about-toc-title" class="min-w-0">
+      <h2 id="about-toc-title" class="sr-only" data-i18n="about.toc.label">On this page</h2>
+      <ul class="flex flex-wrap gap-4 list-none ps-0">
+        <li><a class="text-gold underline" href="#what" data-i18n="about.toc.what">What it is and why</a></li>
+        <li><a class="text-gold underline" href="#audience" data-i18n="about.toc.audience">Who it is for</a></li>
+        <li><a class="text-gold underline" href="#use" data-i18n="about.toc.use">How to use it</a></li>
+        <li><a class="text-gold underline" href="#how" data-i18n="about.toc.how">How it works</a></li>
+        <li><a class="text-gold underline" href="#links" data-i18n="about.toc.links">Links</a></li>
+      </ul>
+    </nav>
+
+    <section id="what" aria-labelledby="what-title" class="grid gap-3 min-w-0">
+      <h2 id="what-title" class="text-2xl" data-i18n="about.what.title">What NecroMARC is and why it was built</h2>
+      <p data-i18n="about.what.p1">NecroMARC revives legacy library catalog records. It parses binary MARC files in the ISO 2709 format, scores how decayed each record is, rebuilds it into clean structured data, and shows the result in an archive and a knowledge graph.</p>
+      <p data-i18n="about.what.p2">MARC 21 itself is an actively maintained standard, published and updated by the Library of Congress. The problem is the 1960s ISO 2709 binary flat-file container that holds so many historical records.</p>
+      <p data-i18n="about.what.problems">That container leaves records in unindexed silos and causes these problems:</p>
+      <ul class="list-disc ps-6 grid gap-1">
+        <li data-i18n="about.what.p.encoding">Broken character encodings.</li>
+        <li data-i18n="about.what.p.520">Missing 520 summaries.</li>
+        <li data-i18n="about.what.p.linked">No Linked Data support: no BIBFRAME and no JSON-LD.</li>
+      </ul>
+    </section>
+
+    <section id="audience" aria-labelledby="audience-title" class="grid gap-3 min-w-0">
+      <h2 id="audience-title" class="text-2xl" data-i18n="about.audience.title">Who it is for</h2>
+      <p data-i18n="about.audience.intro">NecroMARC is made for:</p>
+      <ul class="list-disc ps-6 grid gap-1">
+        <li data-i18n="about.audience.librarians">Librarians</li>
+        <li data-i18n="about.audience.cataloguers">Cataloguers</li>
+        <li data-i18n="about.audience.researchers">Digital-humanities researchers</li>
+        <li data-i18n="about.audience.judges">Hackathon judges</li>
+      </ul>
+    </section>
+
+    <section id="use" aria-labelledby="use-title" class="grid gap-3 min-w-0">
+      <h2 id="use-title" class="text-2xl" data-i18n="about.use.title">How to use it</h2>
+      <ol class="list-decimal ps-6 grid gap-1">
+        <li data-i18n="about.use.s1">Browse the archive of resurrected records on the home page.</li>
+        <li data-i18n="about.use.s2">Explore the knowledge graph to see how records connect.</li>
+        <li data-i18n="about.use.s3">Try the Sample Tomb on the Summon page to resurrect a ready-made sample.</li>
+        <li data-i18n="about.use.s4">Log in with Judge login. Uploading and resurrecting need a judge session.</li>
+        <li data-i18n="about.use.s5">Upload a .mrc file of any size up to 5 MB.</li>
+        <li data-i18n="about.use.s6">Choose up to 5 of the parsed records.</li>
+        <li data-i18n="about.use.s7">Resurrect the selected records and open each one in its chamber.</li>
+      </ol>
+      <p data-i18n="about.use.limit">Why only 5 records? The limit protects the project's free AI quota.</p>
+      <p>
+        <span data-i18n="about.use.sources">No .mrc file at hand? The Summon page lists sites with free MARC 21 records.</span>
+        <a class="text-gold underline" href={`${base}/summon/#marc-sources`} data-i18n="about.use.sources_link">Open the Summon page</a>
+      </p>
+    </section>
+
+    <section id="how" aria-labelledby="how-title" class="grid gap-3 min-w-0">
+      <h2 id="how-title" class="text-2xl" data-i18n="about.how.title">How it works and AI provenance</h2>
+      <ul class="list-disc ps-6 grid gap-1">
+        <li data-i18n="about.how.decay">Each record gets a decay score from fixed rules, such as missing fields or damaged encoding.</li>
+        <li data-i18n="about.how.heal">An AI model heals the 520 summary, the 650 subjects and the 008 fixed field. It runs through OpenRouter.</li>
+        <li data-i18n="about.how.embed">Gemini embeddings power semantic search. No machine-learning model runs locally.</li>
+        <li data-i18n="about.how.export">Each record can be exported as ISO 2709, MARCXML or JSON-LD.</li>
+      </ul>
+      <p data-i18n="about.how.prov">Every field the AI writes is marked with this subfield:</p>
+      <p><code class="marc-text" dir="ltr" lang="und">$9 NecroMARC-AI</code></p>
+      <p data-i18n="about.how.prov_note">Original fields never carry this mark.</p>
+    </section>
+
+    <section id="links" aria-labelledby="links-title" class="grid gap-3 min-w-0">
+      <h2 id="links-title" class="text-2xl" data-i18n="about.links.title">Links</h2>
+      <ul class="list-none ps-0 grid gap-2">
+        <li><a class="text-gold underline break-words" href={GITHUB_URL} target="_blank" rel="noopener noreferrer" data-i18n="about.links.github">NecroMARC on GitHub</a></li>
+        <li><a class="text-gold underline" href={`${base}/summon/#marc-sources`} data-i18n="about.links.summon">Summon page and MARC sources</a></li>
+        <li><a class="text-gold underline" href={`${base}/graph/`} data-i18n="about.links.graph">Knowledge graph</a></li>
+      </ul>
+    </section>
+  </main>
+</BaseLayout>

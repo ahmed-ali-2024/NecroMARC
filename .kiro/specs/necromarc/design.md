@@ -1180,7 +1180,9 @@ Component boundaries use at least 3:1 contrast against the background. The red d
 
 ### Uploader
 
-`validateUpload(file, count?) -> {ok} | {error: key, params}` is a pure function: the name must end with `.mrc` (case-insensitive, 13.9-13.10), `file.size <= MAX_UPLOAD_BYTES` (a build-time constant mirrored from Config), and, after the API parse, at most 5 records (13.11). Rejections happen before any resurrection request and show the limit in the message. A Judge flow is: select file, `POST /upload-mrc`, check the record count, then `POST /resurrect`.
+`validateUpload(file) -> {ok} | {error: key, params}` is a pure function: the name must end with `.mrc` (case-insensitive, 13.9-13.10) and `file.size <= MAX_UPLOAD_BYTES` (a build-time constant mirrored from Config, 13.11). The record count never causes a rejection. Rejections happen before any request and show the size limit in the message.
+
+A Judge flow is: select file, `POST /upload-mrc` (returns every record with its decay score), choose at most 5 records, then `POST /resurrect`. Selection is handled by `toggleSelection(selected, index, max)` in `frontend/src/lib/selection.ts`, which returns `{selected, rejected}`. A sixth selection is rejected and the UI shows a message that the limit protects the free AI quota. `MAX_BATCH_RECORDS` (5) stays as the cap for `POST /resurrect` (Requirement 9.5).
 
 ### Knowledge graph UI
 
@@ -1463,9 +1465,15 @@ flowchart LR
 
 ### Property 35: Upload file validation
 
-*For any* file name and size, `validateUpload` accepts if and only if the name ends in `.mrc` (case-insensitive) and the size is within the limit. A rejection happens before any request is sent and names the applicable limit.
+*For any* file name and size, `validateUpload` accepts if and only if the name ends in `.mrc` (case-insensitive) and the size is within the limit. A rejection happens before any request is sent and names the applicable limit. Record count plays no part in this property.
 
 **Validates: Requirements 13.9, 13.10, 13.11**
+
+### Property 35a: Selection cap
+
+*For any* sequence of toggles, `toggleSelection` never yields more than 5 selected records, blocks a sixth selection with `rejected` set, and toggling the same index twice restores the previous selection.
+
+**Validates: Requirements 13.11**
 
 ## Error Handling
 

@@ -171,6 +171,53 @@ describe('Uploader / Sample Tomb', () => {
     await vi.waitFor(() => expect($('up-error').hidden).toBe(false));
     expect(($('up-tomb') as HTMLButtonElement).disabled).toBe(false);
   });
+
+  it('judge: 60 parsed records load with selection capped at 5 across pages', async () => {
+    sessionStorage.setItem(TOKEN_KEY, 'jwt');
+    const records = Array.from({ length: 60 }, (_, i) => ({
+      index: i,
+      record: { leader: `L${i}`, fields: [] },
+      decay: { score: i, breakdown: [] },
+      title: `Title ${i}`,
+      control_number: `cn${i}`,
+    }));
+    const resurrectBodies: { records: unknown[] }[] = [];
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith('/upload-mrc')) {
+        return json(200, { records, errors: [{ code: 'X', message: 'm', byte_offset: 0 }] });
+      }
+      resurrectBodies.push(JSON.parse(String(init?.body)));
+      return json(200, { results: [], summary: { submitted: 0, succeeded: 0, failed: 0 } });
+    });
+    vi.stubGlobal('fetch', f);
+    await mount('Uploader', extra);
+    const input = $<HTMLInputElement>('up-file');
+    Object.defineProperty(input, 'files', { value: [new File([new Uint8Array(10)], 'big.mrc')], configurable: true });
+    input.dispatchEvent(new Event('change'));
+    await vi.waitFor(() => expect($('up-results').hidden).toBe(false));
+    const boxes = () => Array.from($('up-list').querySelectorAll<HTMLInputElement>('input[type=checkbox]'));
+    expect($('up-parsed-count').textContent).toContain('60');
+    expect(boxes().length).toBe(20);
+    expect(boxes().filter((b) => b.checked).length).toBe(5);
+    expect($('up-counter').textContent).toContain('5 / 5');
+    // a 6th selection is blocked with a message
+    boxes()[10].checked = true;
+    boxes()[10].dispatchEvent(new Event('change'));
+    expect(boxes()[10].checked).toBe(false);
+    expect($('up-why').hidden).toBe(false);
+    expect($('up-why').textContent).not.toBe('');
+    expect($('up-counter').textContent).toContain('5 / 5');
+    // page changes keep the selection
+    $('up-next').click();
+    expect($('up-page').textContent).toContain('2');
+    expect(boxes().some((b) => b.checked)).toBe(false);
+    $('up-prev').click();
+    expect(boxes().filter((b) => b.checked).length).toBe(5);
+    // resurrect sends at most 5
+    $('up-summon-all').click();
+    await vi.waitFor(() => expect(resurrectBodies.length).toBe(1));
+    expect(resurrectBodies[0].records.length).toBeLessThanOrEqual(5);
+  });
 });
 
 describe('SemanticSearch', () => {

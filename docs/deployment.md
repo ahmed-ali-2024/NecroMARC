@@ -102,6 +102,28 @@ Upload the **contents** of `frontend/dist/` (including the dotfile `.htaccess`, 
 
 The `.htaccess` provides: no directory listing, `DirectoryIndex index.html`, HTTPS redirect, trailing-slash redirect for directories, dotfile denial, immutable caching for `_astro/` assets, `no-cache` for HTML, `X-Content-Type-Options`, `Referrer-Policy` and a Content-Security-Policy. There is no SPA fallback rewrite, because each route is a real directory with an `index.html`.
 
+### Frontend-only updates
+
+Changes to the upload and selection flow (any file within 5 MB can be uploaded, the Judge selects up to 5 records), the About page, the MARC sources list, and translations touch the frontend only. Rebuild with `PUBLIC_BASE_PATH` and `PUBLIC_API_URL` as above and upload `frontend/dist/` only. There is no backend change and no restart.
+
+### Automatic frontend deploy (GitHub Actions over FTPS)
+
+The `deploy` job in `.github/workflows/ci.yml` publishes `frontend/dist/` to `public_html/necromarc/` after the Python and frontend jobs pass. It runs only on `push` to `main` and on manual runs, never on pull requests.
+
+One-time setup:
+
+1. In cPanel, create an FTP account whose directory is `public_html/necromarc`. Do not use the main account.
+2. In GitHub, create an Environment named `production`, then add these secrets (Settings, Secrets and variables, Actions): `FTP_SERVER`, `FTP_USERNAME`, `FTP_PASSWORD`. Optionally require a reviewer on the environment.
+3. Run the workflow manually (Actions, CI, Run workflow, branch `main`) with **Dry run** enabled and read the list of planned changes. Then run it again with Dry run disabled, or push to `main`.
+
+What is protected:
+
+- `api/` is excluded, so it is neither uploaded nor deleted. The Passenger mount keeps working.
+- `.htaccess` is excluded, so the file on the server (with the `RewriteCond %{REQUEST_URI} !^/necromarc/api` exception) is never replaced. The same exception is now also in `frontend/public/.htaccess`, so a manual upload is safe too.
+- The action keeps `.ftp-deploy-sync-state.json` in the server directory. It records what the action uploaded, and only those files are ever deleted. Dotfiles are denied by `.htaccess`, so it is not downloadable. Keep `dangerous-clean-slate` at `false`.
+
+Because `.htaccess` is not deployed, a change to `frontend/public/.htaccess` (for example the Content-Security-Policy) must be copied to the server by hand.
+
 ## 8. Upload size limit
 
 The Apache `LimitRequestBody` for the API path must be at least `MAX_UPLOAD_BYTES` (default 5242880) plus multipart overhead. If the host sets a lower limit, ask the provider to raise it. The API's own HTTP 413 handler enforces `MAX_UPLOAD_BYTES`.

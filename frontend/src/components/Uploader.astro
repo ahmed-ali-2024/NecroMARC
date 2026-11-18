@@ -29,9 +29,26 @@
 
   <div id="up-results" hidden class="grid gap-2">
     <h3 class="text-lg" data-i18n="summon.results.title">Parsed records</h3>
+    <p id="up-parsed-count"></p>
     <p id="up-parse-errors" hidden class="text-decay-red"></p>
-    <p id="up-limit" class="text-sm" data-i18n="summon.results.limit">At most 5 records can be summoned at once.</p>
+    <p id="up-limit" class="text-sm" data-i18n="summon.results.limit">Files up to 5 MB can be loaded. Select at most 5 records at a time.</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <input type="search" id="up-search" dir="auto" class="px-2 py-1 border border-gold/70 bg-transparent min-w-0 flex-1" data-i18n-attr="aria-label:summon.results.search" />
+      <button type="button" id="up-sort" class="px-3 py-1 border border-gold text-gold"></button>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span id="up-counter" role="status" aria-live="polite"></span>
+      <button type="button" id="up-top" class="px-3 py-1 border border-gold text-gold" data-i18n="summon.results.select_top">Select 5 most decayed</button>
+      <button type="button" id="up-clear" class="px-3 py-1 border border-gold text-gold" data-i18n="summon.results.clear">Clear selection</button>
+    </div>
+    <p id="up-why" role="alert" hidden class="text-decay-red text-sm"></p>
     <ul id="up-list" class="list-none ps-0 grid gap-2"></ul>
+    <p id="up-empty" hidden class="text-sm"></p>
+    <nav id="up-pager" class="flex flex-wrap items-center gap-3">
+      <button type="button" id="up-prev" class="px-3 py-1 border border-gold text-gold"></button>
+      <span id="up-page" role="status" aria-live="polite"></span>
+      <button type="button" id="up-next" class="px-3 py-1 border border-gold text-gold"></button>
+    </nav>
     <div>
       <button type="button" id="up-summon-all" class="px-4 py-2 border border-gold text-gold" data-i18n="summon.results.summon_all">Summon selected (up to 5)</button>
     </div>
@@ -48,7 +65,9 @@
   import { isJudge } from '../lib/auth';
   import { t } from '../i18n/i18n';
   import { appendLine, showFailure, showSuccess } from '../lib/terminal';
-  import { MAX_BATCH_RECORDS, countRecords, summonErrorView, validateRecordCount, validateUpload } from '../lib/upload';
+  import { MAX_BATCH_RECORDS, summonErrorView, validateUpload } from '../lib/upload';
+  import { filterItems, paginate, selectTopDecay, sortItems, toggleSelection } from '../lib/selection';
+  import type { SortMode } from '../lib/selection';
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
   const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
@@ -63,6 +82,17 @@
   const statusEl = $('up-status');
   const resultsBox = $('up-results');
   const parseErrors = $('up-parse-errors');
+  const parsedCount = $('up-parsed-count');
+  const searchEl = $<HTMLInputElement>('up-search');
+  const sortBtn = $<HTMLButtonElement>('up-sort');
+  const counterEl = $('up-counter');
+  const topBtn = $<HTMLButtonElement>('up-top');
+  const clearBtn = $<HTMLButtonElement>('up-clear');
+  const whyEl = $('up-why');
+  const emptyEl = $('up-empty');
+  const prevBtn = $<HTMLButtonElement>('up-prev');
+  const nextBtn = $<HTMLButtonElement>('up-next');
+  const pageEl = $('up-page');
   const list = $('up-list');
   const summonAll = $<HTMLButtonElement>('up-summon-all');
   const outcome = $('up-outcome');
@@ -72,6 +102,12 @@
 
   let items: ParsedItem[] = [];
   let parseErrorCount = 0;
+  const PAGE_SIZE = 20;
+  let selected = new Set<number>();
+  let query = '';
+  let sortMode: SortMode = 'original';
+  let page = 1;
+  let whyShown = false;
   let busy = false;
   let errorState: { key: string; params?: Record<string, number> } | null = null;
   let statusKey: string | null = null;
@@ -97,29 +133,62 @@
     summonAll.disabled = busy;
     if (!judge) {
       items = [];
+      selected = new Set();
+      whyShown = false;
       renderItems();
     }
   }
 
   function selectedItems(): ParsedItem[] {
-    const boxes = list.querySelectorAll<HTMLInputElement>('input[type=checkbox]');
-    return items.filter((_, i) => boxes[i]?.checked).slice(0, MAX_BATCH_RECORDS);
+    return [...selected]
+      .sort((x, y) => x - y)
+      .map((i) => items[i])
+      .filter(Boolean);
+  }
+
+  function setWhy(show: boolean) {
+    whyShown = show;
+    whyEl.hidden = !show;
+    whyEl.textContent = show ? t('summon.results.why_limit') : '';
   }
 
   function renderItems() {
     list.replaceChildren();
     resultsBox.hidden = items.length === 0 && parseErrorCount === 0;
+    parsedCount.textContent = t('summon.results.parsed_count', { count: items.length });
     parseErrors.hidden = parseErrorCount === 0;
     parseErrors.textContent = t('summon.results.parse_errors', { count: parseErrorCount });
     summonAll.hidden = items.length === 0;
-    items.forEach((it, i) => {
+    searchEl.placeholder = t('summon.results.search');
+    sortBtn.textContent = t(sortMode === 'original' ? 'summon.results.sort_original' : 'summon.results.sort_decay');
+    counterEl.textContent = t('summon.results.selected', { n: selected.size, max: MAX_BATCH_RECORDS });
+    setWhy(whyShown);
+    const entries = items.map((it, i) => ({ it, i, title: it.title, control_number: it.control_number, decay: it.decay }));
+    const view = sortItems(filterItems(entries, query), sortMode);
+    const pages = Math.max(1, Math.ceil(view.length / PAGE_SIZE));
+    page = Math.min(Math.max(1, page), pages);
+    pageEl.textContent = t('summon.results.page', { page, pages });
+    prevBtn.textContent = t('summon.results.prev');
+    nextBtn.textContent = t('summon.results.next');
+    prevBtn.disabled = page <= 1;
+    nextBtn.disabled = page >= pages;
+    emptyEl.hidden = !(items.length > 0 && view.length === 0);
+    emptyEl.textContent = emptyEl.hidden ? '' : t('summon.results.no_matches');
+    for (const { it, i } of paginate(view, page, PAGE_SIZE)) {
       const li = document.createElement('li');
       li.className = 'flex flex-wrap items-center gap-3 border border-gold/40 p-2';
       const cb = document.createElement('input');
       cb.type = 'checkbox';
-      cb.checked = i < MAX_BATCH_RECORDS;
+      cb.checked = selected.has(i);
       const title = it.title ?? it.control_number ?? t('archive.record.untitled');
       cb.setAttribute('aria-label', t('summon.results.select', { title }));
+      cb.addEventListener('change', () => {
+        const r = toggleSelection([...selected], i, MAX_BATCH_RECORDS);
+        selected = new Set(r.selected);
+        cb.checked = selected.has(i);
+        setWhy(r.rejected);
+        counterEl.textContent = t('summon.results.selected', { n: selected.size, max: MAX_BATCH_RECORDS });
+      });
       const name = document.createElement('span');
       name.dir = 'auto';
       name.textContent = title;
@@ -134,15 +203,6 @@
       btn.addEventListener('click', () => void run([it.record]));
       li.append(cb, name, score, btn);
       list.appendChild(li);
-    });
-    if (items.length) {
-      const boxes = list.querySelectorAll<HTMLInputElement>('input[type=checkbox]');
-      boxes.forEach((b) =>
-        b.addEventListener('change', () => {
-          const checked = Array.from(boxes).filter((x) => x.checked);
-          if (checked.length > MAX_BATCH_RECORDS) b.checked = false;
-        }),
-      );
     }
   }
 
@@ -173,6 +233,8 @@
     chooseBtn.disabled = b;
     syncAuth();
     list.querySelectorAll<HTMLButtonElement>('button').forEach((x) => (x.disabled = b));
+    topBtn.disabled = b;
+    clearBtn.disabled = b;
   }
 
   function handleError(e: unknown) {
@@ -217,10 +279,13 @@
     setError(null);
     const check = validateUpload(file);
     if (!check.ok) return setError({ key: check.errorKey });
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const count = validateRecordCount(countRecords(bytes));
-    if (!count.ok) return setError({ key: count.errorKey });
     items = [];
+    selected = new Set();
+    query = '';
+    searchEl.value = '';
+    sortMode = 'original';
+    page = 1;
+    whyShown = false;
     parseErrorCount = 0;
     last = null;
     renderOutcome();
@@ -229,6 +294,7 @@
     try {
       const res = await uploadMrc(file, file.name);
       items = res.records;
+      selected = new Set(items.slice(0, MAX_BATCH_RECORDS).map((_, i) => i));
       parseErrorCount = res.errors.length;
       if (items.length === 0 && parseErrorCount === 0) setError({ key: 'summon.results.none' });
     } catch (e) {
@@ -267,6 +333,34 @@
     void onFile(e.dataTransfer?.files?.[0]);
   });
   tombBtn.addEventListener('click', () => void onTomb());
+  searchEl.addEventListener('input', () => {
+    query = searchEl.value;
+    page = 1;
+    renderItems();
+  });
+  sortBtn.addEventListener('click', () => {
+    sortMode = sortMode === 'original' ? 'decay' : 'original';
+    page = 1;
+    renderItems();
+  });
+  prevBtn.addEventListener('click', () => {
+    page -= 1;
+    renderItems();
+  });
+  nextBtn.addEventListener('click', () => {
+    page += 1;
+    renderItems();
+  });
+  topBtn.addEventListener('click', () => {
+    selected = new Set(selectTopDecay(items, MAX_BATCH_RECORDS));
+    setWhy(false);
+    renderItems();
+  });
+  clearBtn.addEventListener('click', () => {
+    selected = new Set();
+    setWhy(false);
+    renderItems();
+  });
   summonAll.addEventListener('click', () => void run(selectedItems().map((i) => i.record)));
   for (const id of ['up-login', 'up-login2']) {
     const b = $<HTMLButtonElement>(id);

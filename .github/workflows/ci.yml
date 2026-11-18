@@ -3,6 +3,12 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry run: print the FTP changes without applying them"
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -74,3 +80,65 @@ jobs:
 
       - name: Bundle check
         run: npm run check:bundle
+
+      # The deploy job publishes exactly the build that was tested.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4.6.2
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    # Only after both test jobs pass, only for main, never for pull requests.
+    needs: [python, frontend]
+    if: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Download build artifact
+        uses: actions/download-artifact@v4.3.0
+        with:
+          name: frontend-dist
+          path: dist/
+
+      - name: Check FTP secrets are set
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          for name in FTP_SERVER FTP_USERNAME FTP_PASSWORD; do
+            if [ -z "${!name}" ]; then
+              echo "Missing secret: $name" >&2
+              exit 1
+            fi
+          done
+
+      # FTP account is restricted to public_html/necromarc, so the server dir is "./".
+      # Excluded paths are neither uploaded nor deleted:
+      #   - api/ is the Passenger application mount managed from cPanel
+      #   - .htaccess on the server carries the /necromarc/api rewrite exception
+      # dangerous-clean-slate must stay false.
+      - name: Sync frontend over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          port: 21
+          local-dir: ./dist/
+          server-dir: ./
+          dangerous-clean-slate: false
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          log-level: standard
+          exclude: |
+            **/.htaccess
+            api
+            api/**
+            **/.ftp-deploy-sync-state.json

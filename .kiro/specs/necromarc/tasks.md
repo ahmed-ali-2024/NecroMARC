@@ -381,7 +381,7 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - _Requirements: 13.2, 13.3, 13.4, 13.5, 13.6, 13.7_
 
   - [x] 22.2 Implement the uploader, Sample Tomb, and summon page
-    - `/summon/` with `validateUpload` (`.mrc` case-insensitive, size limit, at most 5 records, rejected before any request, with limit messages), the upload then resurrect flow, the "Summon & Resurrect Sample Tomb" action (fetches `/samples/tomb` then posts to `/resurrect`), result display in the chamber, locked states in Guest mode, and session-expired handling.
+    - `/summon/` with `validateUpload` (`.mrc` case-insensitive, size limit only, rejected before any request, with the size-limit message; no record-count rejection, and the Judge selects at most 5 records after parsing, see task 26), the upload then resurrect flow, the "Summon & Resurrect Sample Tomb" action (fetches `/samples/tomb` then posts to `/resurrect`), result display in the chamber, locked states in Guest mode, and session-expired handling.
     - _Requirements: 13.8, 13.9, 13.10, 13.11, 13.12, 13.13, 13.14_
 
   - [x] 22.3 Implement the semantic search box
@@ -389,7 +389,7 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - _Requirements: 4.10, 4.11, 4.12, 12.10, 13.5_
 
   - [x] 22.4 Write property test for upload validation
-    - **Property 35: Upload file validation** (fast-check)
+    - **Property 35: Upload file validation** (fast-check; covers extension and size only, selection cap is tested separately in task 26.1)
     - **Validates: Requirements 13.9, 13.10, 13.11**
 
   - [x] 22.5 Write component tests and the bundle secret gate
@@ -416,8 +416,52 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - `.github/workflows/ci.yml` running pytest (the `ci` profile), `scripts/check_deps.py`, `scripts/secret_scan.py`, frontend lint, tests, `check-i18n.mjs`, `astro build` with the production variables, `check-bundle.mjs`, and an assertion that `.kiro/` is not ignored.
     - _Requirements: 16.12, 17.14, 18.9, 19.1_
 
-- [-] 25. Final checkpoint - Ensure all tests pass
+- [x] 25. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 26. Phase 10: Large MARC upload with selection, MARC sources, About page
+  - [x] 26.1 Implement selection logic (pure functions) and tests
+    - Create `frontend/src/lib/selection.ts` with `toggleSelection(selected, index, max)` returning `{selected, rejected}`, `selectTopDecay(items, n)`, `filterItems(items, query)` (accent- and case-insensitive on title and control number), `sortItems(items, mode)` (original order or decay descending), and `paginate(list, page, size)`.
+    - In `frontend/src/lib/upload.ts` remove `validateRecordCount` from the upload path. Keep `MAX_BATCH_RECORDS` (the 5-record cap stays on `POST /api/resurrect`, Requirement 9.5) and keep `countRecords` only if it is still used. Keep `MAX_UPLOAD_BYTES` at 5 MiB. The backend `/api/upload-mrc` already returns every record with its decay score, so make no backend change.
+    - Update `upload.test.ts` and `upload.property.test.ts` so Property 35 covers extension and size only.
+    - Read-only check: parse the three files in `MARC-FILES-PGA/` with `parse_iso2709` and report each file's size and record count, confirming each is under 5 MiB. Do not modify those files.
+    - Add fast-check tests: a selection never exceeds 5, toggling an index twice restores the selection, `paginate` covers every item exactly once, `filterItems` returns a subset of its input, and `selectTopDecay` returns the highest scores in descending order.
+    - _Requirements: 13.9, 13.10, 13.11_
+
+  - [x] 26.2 Rework the Uploader for large files with record selection
+    - Remove the count rejection in `frontend/src/components/Uploader.astro`. Hold the parsed items and a selected `Set<number>`, with the first 5 records preselected after parsing.
+    - Render one page of 20 records with a title search, a sort toggle (original order or decay descending), page controls, a "Selected n / 5" counter, a "Select 5 most decayed" button, and a "Clear selection" button. Show the parsed record count and the parse-error count.
+    - When a 6th record is selected, keep the selection unchanged and show an inline "why 5" message explaining that the limit protects the project's free AI quota. Do not uncheck anything silently. Update the `summon.results.limit` text.
+    - Keep `run()`'s defensive check that rejects more than 5 selected records. Keep the selection across language changes and page changes.
+    - Add the new keys under `summon.*` in `en.json` and `ar.json` with identical key sets. Use logical Tailwind utilities only (the lint test scans `src/`).
+    - Add happy-dom tests with a mocked API that returns 60 records: all 60 load, the 6th selection is blocked with the message, page changes keep the selection, and the resurrect call sends 5 records or fewer.
+    - _Requirements: 13.8, 13.9, 13.10, 13.11, 13.12, 13.13, 13.14_
+
+  - [x] 26.3 Sync the spec documents with the new upload behavior
+    - In `requirements.md`, rewrite Requirement 13.11 so the frontend rejects an upload only on file extension or size, and limits selection to 5 records.
+    - In `design.md`, update the Uploader section and Property 35 to match (Property 35 covers extension and size only; selection limits are covered by the new selection tests).
+    - In `tasks.md`, update the text of tasks 22.2 and 22.4 to match, without changing their checkbox state, numbering, or order.
+    - Write key-prefix patterns only in bracketed form (`sk-or[-]`, `AI[z]a`, `ey[J]`). Run `python scripts/secret_scan.py` and confirm it exits 0.
+    - _Requirements: 13.9, 13.10, 13.11_
+
+  - [x] 26.4 Add MARC source links to the summon page
+    - Create `frontend/src/lib/marcSources.ts` with three entries (URL plus i18n note keys): `https://gutenberg.net.au/marc.html` (ZIP archive, unzip first), `https://britishonlinearchives.com/librarian-resources/marc-21-records` (collection list), and `https://openbookpublishers.com/libraries/marc-records` (availability not verified).
+    - Create `frontend/src/components/MarcSources.astro` and place it on the summon page. Every link uses `target="_blank"` and `rel="noopener noreferrer"`.
+    - Add `sources.*` keys to `en.json` and `ar.json` in parity, including a tip that files must end in `.mrc` and stay under 5 MB.
+    - Add tests: every URL uses https and is unique, every i18n key exists in both dictionaries, and every link has the `rel` attribute. Confirm that the existing "no third-party CDN URLs" test in `theme.test.ts` scans only CSS and does not reject these links.
+    - _Requirements: 13.1, 13.8, 14.9, 14.10_
+
+  - [x] 26.5 Build the About page and header link
+    - Create `frontend/src/pages/about/index.astro` using `BaseLayout`, with these sections: what NecroMARC is and why it exists (rescuing MARC 21 records locked in 1960s ISO 2709 binary files, stating that MARC 21 itself is actively maintained and never calling it dead, and naming the missing 520 summaries, broken encodings, and lack of Linked Data); who it is for (librarians, cataloguers, digital-humanities researchers, hackathon judges); how to use it (browse the archive, explore the graph, Sample Tomb, Judge login, upload, choose up to 5 records, resurrect, and why the limit is 5); how it works and AI provenance (`$9 NecroMARC-AI` on AI-written fields, ISO 2709, MARCXML, and JSON-LD exports); and links, including `https://github.com/ahmed-ali-2024/NecroMARC` with `rel="noopener noreferrer"`.
+    - Use only facts found in `README.md` and `design.md`. Add no invented claims.
+    - Add an About link to `frontend/src/components/Header.astro` (key `nav.about`) and `about.*` keys to `en.json` and `ar.json` in parity. Use logical Tailwind utilities only.
+    - Add tests: the page builds, the nav link exists, the GitHub URL is present, the dictionaries are in parity, and the lint test finds no physical-direction utilities.
+    - _Requirements: 14.1, 14.9, 14.10, 14.11_
+
+  - [x] 26.6 Update documentation and run final verification
+    - Update `README.md` (batch limit and record selection, the About page, MARC sources) and `docs/deployment.md` (rebuild and upload `dist/` only; no backend change).
+    - Run `npm test`, `npm run check:i18n`, `npm run build` with `PUBLIC_BASE_PATH=/necromarc` and `PUBLIC_API_URL=https://3aai.in/necromarc/api`, `npm run check:bundle`, backend `pytest`, `python scripts/check_deps.py`, and `python scripts/secret_scan.py`. The environment blocks sourcing `.env`, so do not run live database tests.
+    - _Requirements: 16.12, 17.14, 18.9_
 
 ## Notes
 
@@ -454,7 +498,12 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     { "id": 19, "tasks": ["20.2", "21.2", "21.3", "22.1"] },
     { "id": 20, "tasks": ["20.3", "20.4", "22.3"] },
     { "id": 21, "tasks": ["22.2", "22.4", "22.5"] },
-    { "id": 22, "tasks": ["24.1", "24.2", "24.3", "24.4"] }
+    { "id": 22, "tasks": ["24.1", "24.2", "24.3", "24.4"] },
+    { "id": 23, "tasks": ["26.1", "26.3"] },
+    { "id": 24, "tasks": ["26.2"] },
+    { "id": 25, "tasks": ["26.4"] },
+    { "id": 26, "tasks": ["26.5"] },
+    { "id": 27, "tasks": ["26.6"] }
   ]
 }
 ```

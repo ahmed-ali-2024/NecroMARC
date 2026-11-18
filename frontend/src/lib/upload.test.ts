@@ -2,9 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from './api';
 import {
   DEFAULT_MAX_UPLOAD_BYTES,
-  countRecords,
   summonErrorView,
-  validateRecordCount,
   validateUpload,
 } from './upload';
 
@@ -21,14 +19,6 @@ describe('validateUpload', () => {
       ok: false,
       errorKey: 'summon.error.too_large',
     });
-  });
-});
-
-describe('record count', () => {
-  it('counts terminators and enforces 5', () => {
-    expect(countRecords(new Uint8Array([1, 0x1d, 2, 0x1d]))).toBe(2);
-    expect(validateRecordCount(5).ok).toBe(true);
-    expect(validateRecordCount(6)).toEqual({ ok: false, errorKey: 'summon.error.too_many' });
   });
 });
 

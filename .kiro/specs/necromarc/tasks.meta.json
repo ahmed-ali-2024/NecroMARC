@@ -1668,6 +1668,31 @@
         "executionId": "30f79da7-9af1-4e96-8b34-c2ecd674b783",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794938145704
+      },
+      {
+        "executionId": "68213a5a-bc25-43dd-942d-2e06453b6918",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938280789
+      },
+      {
+        "executionId": "68213a5a-bc25-43dd-942d-2e06453b6918",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938286434
+      },
+      {
+        "executionId": "859b9608-9142-472d-afef-baa9c73335b9",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938778056
+      },
+      {
+        "executionId": "859b9608-9142-472d-afef-baa9c73335b9",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938784295
+      },
+      {
+        "executionId": "859b9608-9142-472d-afef-baa9c73335b9",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1794938987813
       }
     ],
     "1. Phase 1: Repo hygiene and scaffold": [
@@ -1780,6 +1805,85 @@
         "executionId": "50c9497f-0431-4de9-b9c0-ef30954719cb",
         "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
         "timestamp": 1794850616912
+      }
+    ],
+    "26.1 Implement selection logic (pure functions) and tests": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026390350
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026546146
+      }
+    ],
+    "26.3 Sync the spec documents with the new upload behavior": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026390845
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026546576
+      }
+    ],
+    "26.2 Rework the Uploader for large files with record selection": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026558214
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026852429
+      }
+    ],
+    "26.4 Add MARC source links to the summon page": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795026859960
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027048199
+      }
+    ],
+    "26.5 Build the About page and header link": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027055794
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027270407
+      }
+    ],
+    "26.6 Update documentation and run final verification": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027278329
+      },
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027417593
+      }
+    ],
+    "26. Phase 10: Large MARC upload with selection, MARC sources, About page": [
+      {
+        "executionId": "4f5873f1-e659-4d9c-bbac-cd8120350ad4",
+        "chatSessionId": "sess_01f47e15-c4b2-4d38-8767-857532c5e591",
+        "timestamp": 1795027417993
       }
     ]
   }
