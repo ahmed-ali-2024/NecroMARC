@@ -30,11 +30,17 @@ def test_trigger_and_matcher():
     assert not rx.search("backend/app/x.py")
 
 
-def test_action_command_script_exists_and_executable():
+def test_action_command_script_exists_and_runnable():
     cmd = _hook()["action"]["command"]
     assert "scripts/run_parser_tests.sh" in cmd
     script = ROOT / "scripts" / "run_parser_tests.sh"
-    assert script.is_file() and os.access(script, os.X_OK)
+    assert script.is_file()
+    # The hook runs the script through an interpreter (`bash scripts/...`), so the
+    # execute bit is not needed. It is only required if the command runs the file
+    # directly. Git on some filesystems (exFAT/NTFS mounts) does not keep the bit,
+    # so checking it unconditionally fails on a fresh CI checkout.
+    runs_via_interpreter = re.match(r"\s*(ba)?sh\s", cmd) is not None
+    assert runs_via_interpreter or os.access(script, os.X_OK)
 
 
 def test_kiro_dirs_exist_and_not_ignored():
