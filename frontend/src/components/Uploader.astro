@@ -1,61 +1,61 @@
 ---
 ---
-<section id="uploader" class="border border-gold/70 p-4 grid gap-4 min-w-0" aria-labelledby="up-title">
-  <h2 id="up-title" class="text-xl" data-i18n="summon.upload.title">Upload a .mrc file</h2>
+<section id="uploader" class="surface-1 p-4 grid gap-4 min-w-0" aria-labelledby="up-title">
+  <h2 id="up-title" class="font-serif text-xl text-gold" data-i18n="summon.upload.title">Upload a .mrc file</h2>
 
   <div id="up-guest" class="flex flex-wrap items-center gap-3" hidden>
     <span data-i18n="summon.guest">Uploading and resurrecting are available to judges.</span>
-    <button type="button" id="up-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+    <button type="button" id="up-login" class="btn" data-i18n="nav.login">Judge login</button>
   </div>
 
   <div id="up-judge" class="grid gap-3" hidden>
-    <div id="up-drop" class="border border-dashed border-gold p-6 text-center grid gap-2 justify-items-center">
+    <div id="up-drop" class="p-6 text-center grid gap-2 justify-items-center">
       <p data-i18n="summon.upload.drop">Drop a .mrc file here</p>
       <input type="file" id="up-file" accept=".mrc" class="sr-only" tabindex="-1" aria-hidden="true" />
-      <button type="button" id="up-choose" class="px-4 py-2 border border-gold text-gold" data-i18n="summon.upload.button">Choose file</button>
+      <button type="button" id="up-choose" class="btn" data-i18n="summon.upload.button">Choose file</button>
     </div>
   </div>
 
   <div class="flex flex-wrap items-center gap-3">
-    <button type="button" id="up-tomb" class="px-4 py-2 border border-gold text-gold" data-i18n="summon.tomb.button">Summon &amp; Resurrect Sample Tomb</button>
+    <button type="button" id="up-tomb" class="btn" data-i18n="summon.tomb.button">Summon &amp; Resurrect Sample Tomb</button>
   </div>
   <div id="up-tomb-guest" class="flex flex-wrap items-center gap-3" hidden>
     <span data-i18n="summon.guest">Uploading and resurrecting are available to judges.</span>
-    <button type="button" id="up-login2" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+    <button type="button" id="up-login2" class="btn" data-i18n="nav.login">Judge login</button>
   </div>
 
-  <p id="up-error" role="alert" hidden class="text-decay-red"></p>
-  <p id="up-status" role="status" aria-live="polite" hidden></p>
+  <p id="up-error" role="alert" hidden class="font-mono text-xs text-decay-red"></p>
+  <p id="up-status" role="status" aria-live="polite" hidden class="font-mono text-xs text-phosphor"></p>
 
   <div id="up-results" hidden class="grid gap-2">
-    <h3 class="text-lg" data-i18n="summon.results.title">Parsed records</h3>
+    <h3 class="font-serif text-lg text-gold" data-i18n="summon.results.title">Parsed records</h3>
     <p id="up-parsed-count"></p>
-    <p id="up-parse-errors" hidden class="text-decay-red"></p>
+    <p id="up-parse-errors" hidden class="font-mono text-xs text-decay-red"></p>
     <p id="up-limit" class="text-sm" data-i18n="summon.results.limit">Files up to 5 MB can be loaded. Select at most 5 records at a time.</p>
     <div class="flex flex-wrap items-center gap-2">
-      <input type="search" id="up-search" dir="auto" class="px-2 py-1 border border-gold/70 bg-transparent min-w-0 flex-1" data-i18n-attr="aria-label:summon.results.search" />
-      <button type="button" id="up-sort" class="px-3 py-1 border border-gold text-gold"></button>
+      <input type="search" id="up-search" dir="auto" class="field min-w-0 flex-1" data-i18n-attr="aria-label:summon.results.search" />
+      <button type="button" id="up-sort" class="btn"></button>
     </div>
     <div class="flex flex-wrap items-center gap-2">
       <span id="up-counter" role="status" aria-live="polite"></span>
-      <button type="button" id="up-top" class="px-3 py-1 border border-gold text-gold" data-i18n="summon.results.select_top">Select 5 most decayed</button>
-      <button type="button" id="up-clear" class="px-3 py-1 border border-gold text-gold" data-i18n="summon.results.clear">Clear selection</button>
+      <button type="button" id="up-top" class="btn" data-i18n="summon.results.select_top">Select 5 most decayed</button>
+      <button type="button" id="up-clear" class="btn" data-i18n="summon.results.clear">Clear selection</button>
     </div>
-    <p id="up-why" role="alert" hidden class="text-decay-red text-sm"></p>
+    <p id="up-why" role="alert" hidden class="font-mono text-xs text-decay-red"></p>
     <ul id="up-list" class="list-none ps-0 grid gap-2"></ul>
     <p id="up-empty" hidden class="text-sm"></p>
     <nav id="up-pager" class="flex flex-wrap items-center gap-3">
-      <button type="button" id="up-prev" class="px-3 py-1 border border-gold text-gold"></button>
+      <button type="button" id="up-prev" class="btn"></button>
       <span id="up-page" role="status" aria-live="polite"></span>
-      <button type="button" id="up-next" class="px-3 py-1 border border-gold text-gold"></button>
+      <button type="button" id="up-next" class="btn"></button>
     </nav>
     <div>
-      <button type="button" id="up-summon-all" class="px-4 py-2 border border-gold text-gold" data-i18n="summon.results.summon_all">Summon selected (up to 5)</button>
+      <button type="button" id="up-summon-all" class="btn" data-i18n="summon.results.summon_all">Summon selected (up to 5)</button>
     </div>
   </div>
 
   <div id="up-outcome" hidden class="grid gap-2">
-    <p id="up-summary" role="status"></p>
+    <p id="up-summary" role="status" class="font-mono text-xs"></p>
     <ul id="up-outcome-list" class="list-none ps-0 grid gap-1"></ul>
   </div>
 </section>

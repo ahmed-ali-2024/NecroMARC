@@ -14,9 +14,13 @@ const { title = 'NecroMARC' } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
   </head>
-  <body>
+  <body class="flex min-h-screen flex-col bg-ink text-parchment font-sans antialiased">
     <Header />
     <slot />
+    <footer class="surface-1 mt-auto flex flex-wrap items-center justify-between gap-sm ps-margin-mobile pe-margin-mobile py-md md:ps-margin md:pe-margin">
+      <span data-i18n="app.name" class="font-serif text-gold">NecroMARC</span>
+      <span data-i18n="app.tagline" class="text-muted text-sm">Resurrect dead library records</span>
+    </footer>
     <LoginModal />
   </body>
 </html>

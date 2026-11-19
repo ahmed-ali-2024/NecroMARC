@@ -1,12 +1,12 @@
 ---
 ---
-<section class="grid gap-4 md:grid-cols-[1fr_18rem]" id="graph-root">
+<section class="grid gap-4 xl:grid-cols-[1fr_18rem]" id="graph-root">
   <div>
     <p id="graph-status" role="status" aria-live="polite" data-i18n="graph.loading">Loading graph…</p>
     <div
       id="graph-canvas"
       role="img"
-      class="block-size-[60vh] inline-size-full border border-gold"
+      class="surface-3 block-[60vh] inline-full border border-gold/30"
       data-i18n-attr="aria-label:graph.canvas.label"
       aria-label="Interactive knowledge graph of archive records"
     ></div>
@@ -15,16 +15,16 @@
       <button type="button" id="graph-clear" class="px-3 py-1 border border-gold text-gold" data-i18n="graph.clear">Clear filters</button>
     </div>
   </div>
-  <aside class="grid gap-4 content-start">
-    <section aria-labelledby="graph-details-title" class="border border-gold p-3">
+  <aside class="grid gap-4 content-start order-first xl:order-none">
+    <section aria-labelledby="graph-details-title" class="surface-1 p-3">
       <h2 id="graph-details-title" class="text-lg" data-i18n="graph.details.title">Selected node</h2>
       <div id="graph-details" aria-live="polite"></div>
     </section>
     <slot />
   </aside>
-  <section aria-labelledby="graph-list-title" class="md:col-span-2">
+  <section aria-labelledby="graph-list-title" class="xl:col-span-2">
     <h2 id="graph-list-title" class="text-lg" data-i18n="graph.list.title">Graph nodes (text list)</h2>
-    <ul id="graph-list" class="list-none ps-0 max-block-size-64 overflow-auto"></ul>
+    <ul id="graph-list" class="list-none ps-0 max-block-64 overflow-auto"></ul>
   </section>
 </section>
 <script>

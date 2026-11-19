@@ -1,0 +1,452 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add self-hosted font dependencies": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109084586
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109095161
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109156851
+      }
+    ],
+    "1.2 Rewrite `global.css` imports, `@theme` tokens and `@layer base`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109085294
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109160920
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109250880
+      }
+    ],
+    "1.3 Mirror colors in `frontend/src/lib/theme.ts`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109085602
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109255155
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109315807
+      }
+    ],
+    "1.4 Add semantic component classes to `global.css` (unlayered)": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109085924
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109255520
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109316240
+      }
+    ],
+    "1.5 Add generated-DOM, header and layout selectors to `global.css`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109086152
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109320098
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109368835
+      }
+    ],
+    "2. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109086413
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109885797
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109914027
+      }
+    ],
+    "3.1 Update `BaseLayout.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109086654
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109374231
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109490330
+      }
+    ],
+    "3.2 Restyle `Header.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109086933
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109374580
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109490940
+      }
+    ],
+    "3.3 Restyle `LanguageToggle.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109087201
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109375130
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109491523
+      }
+    ],
+    "4.1 Restyle the `Archive.astro` template": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109087488
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109376047
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109492436
+      }
+    ],
+    "5.1 Rewrite the `ResurrectedCard.astro` markup and `<style is:global>`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109087811
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109376603
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109493116
+      }
+    ],
+    "5.2 Restyle `TerminalPanel.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109088067
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109497544
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109598002
+      }
+    ],
+    "5.3 Restyle `chamber/index.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109088334
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109498550
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109598999
+      }
+    ],
+    "6.1 Restyle `Uploader.astro` template and `summon/index.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109088589
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109499168
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109599620
+      }
+    ],
+    "6.2 Restyle `LoginModal.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109088846
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109500308
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109600023
+      }
+    ],
+    "7.1 Restyle `SemanticSearch.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109089069
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109500747
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109600610
+      }
+    ],
+    "7.2 Restyle `GraphCanvas.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109089304
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109609958
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109672721
+      }
+    ],
+    "7.3 Restyle `Legend.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109089595
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109611865
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109673084
+      }
+    ],
+    "7.4 Restyle `MarcSources.astro` and `graph/index.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109089860
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109612136
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109673619
+      }
+    ],
+    "8.1 Restyle `index.astro`": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109090130
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109612408
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109674597
+      }
+    ],
+    "9.1 Run the verification commands and fix failures": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109090398
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109680279
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109778606
+      }
+    ],
+    "9.2 Run the static scope checks": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109090627
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109779061
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109879812
+      }
+    ],
+    "10. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109090893
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109914649
+      },
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109956760
+      }
+    ],
+    "1. Foundation: fonts, tokens, shared CSS": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109369089
+      }
+    ],
+    "3. Global shell and header": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109491755
+      }
+    ],
+    "4. Home and Archive": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109492706
+      }
+    ],
+    "5. Resurrection Chamber": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109599254
+      }
+    ],
+    "6. Summon page, Uploader and Login modal": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109600310
+      }
+    ],
+    "7. Graph page": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109673852
+      }
+    ],
+    "8. Home page": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109674870
+      }
+    ],
+    "9. Verification": [
+      {
+        "executionId": "c1a9173f-c052-4f86-ba77-4a4c476643d5",
+        "chatSessionId": "sess_ad5768b8-671f-4e4b-ab9c-bfb097e0bd2a",
+        "timestamp": 1795109880116
+      }
+    ]
+  }
+}

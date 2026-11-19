@@ -6,26 +6,26 @@ import SemanticSearch from '../../components/SemanticSearch.astro';
 import { EDGE_TYPES, MAX_QUERY_LENGTH } from '../../lib/graph';
 ---
 <BaseLayout title="NecroMARC · Graph">
-  <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto">
-    <h1 class="text-3xl mb-4" data-i18n="graphpage.title">Knowledge graph</h1>
-    <form id="graph-toolbar" class="grid gap-3 border border-gold/60 p-4 mb-4" role="search" novalidate>
+  <main class="ps-margin-mobile pe-margin-mobile md:ps-margin md:pe-margin py-6 max-w-6xl mx-auto w-full">
+    <h1 class="font-serif text-3xl text-gold mb-4" data-i18n="graphpage.title">Knowledge graph</h1>
+    <form id="graph-toolbar" class="grid gap-3 surface-1 p-4 mb-4" role="search" novalidate>
       <label class="grid gap-1">
         <span data-i18n="graphpage.search.label">Search the graph</span>
-        <input id="gf-q" type="search" maxlength={MAX_QUERY_LENGTH} class="bg-ink border border-gold text-parchment p-2"
+        <input id="gf-q" type="search" maxlength={MAX_QUERY_LENGTH} class="field"
           data-i18n-attr="placeholder:graphpage.search.placeholder" />
       </label>
       <fieldset class="grid gap-3 sm:grid-cols-2">
         <legend class="mb-1" data-i18n="graphpage.filters">Filters</legend>
         <label class="grid gap-1"><span data-i18n="graphpage.filter.title">Title</span>
-          <input id="gf-title" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+          <input id="gf-title" type="text" class="field" /></label>
         <label class="grid gap-1"><span data-i18n="graphpage.filter.author">Author</span>
-          <input id="gf-author" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+          <input id="gf-author" type="text" class="field" /></label>
         <label class="grid gap-1"><span data-i18n="graphpage.filter.year_from">Year from</span>
-          <input id="gf-year-from" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+          <input id="gf-year-from" type="text" inputmode="numeric" dir="ltr" class="field" /></label>
         <label class="grid gap-1"><span data-i18n="graphpage.filter.year_to">Year to</span>
-          <input id="gf-year-to" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+          <input id="gf-year-to" type="text" inputmode="numeric" dir="ltr" class="field" /></label>
         <label class="grid gap-1 sm:col-span-2"><span data-i18n="graphpage.filter.topic">Topic</span>
-          <input id="gf-topic" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+          <input id="gf-topic" type="text" class="field" /></label>
       </fieldset>
       <fieldset class="flex flex-wrap gap-4">
         <legend class="mb-1" data-i18n="graphpage.filter.edge_types">Edge types</legend>
@@ -36,10 +36,10 @@ import { EDGE_TYPES, MAX_QUERY_LENGTH } from '../../lib/graph';
           </label>
         ))}
       </fieldset>
-      <p id="gf-error" role="alert" hidden class="text-decay-red"></p>
+      <p id="gf-error" role="alert" hidden class="tag-decay"></p>
       <div class="flex gap-2">
-        <button type="submit" class="px-4 py-2 border border-gold text-gold" data-i18n="graphpage.apply">Apply</button>
-        <button type="button" id="gf-clear" class="px-4 py-2 border border-gold text-gold" data-i18n="graphpage.clear">Clear filters</button>
+        <button type="submit" class="btn" data-i18n="graphpage.apply">Apply</button>
+        <button type="button" id="gf-clear" class="btn" data-i18n="graphpage.clear">Clear filters</button>
       </div>
     </form>
 

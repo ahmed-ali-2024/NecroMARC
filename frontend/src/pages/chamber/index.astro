@@ -5,25 +5,25 @@ import ResurrectedCard from '../../components/ResurrectedCard.astro';
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
 ---
 <BaseLayout title="NecroMARC · Chamber">
-  <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto min-w-0">
+  <main class="ps-4 pe-4 py-6 max-w-6xl mx-auto w-full min-w-0">
     <p class="mb-2"><a id="chamber-back" href={`${base}/`} data-i18n="chamber.back">Back to the archive</a></p>
     <h1 id="chamber-title" class="text-3xl mb-4" dir="auto" data-i18n="chamber.title">Chamber</h1>
     <p id="chamber-status" role="status" aria-live="polite" data-i18n="common.loading">Loading…</p>
-    <div id="chamber-error" role="alert" hidden class="grid gap-2 justify-start text-decay-red">
+    <div id="chamber-error" role="alert" hidden class="grid gap-2 justify-start tag-decay">
       <p id="chamber-error-text"></p>
-      <button type="button" id="chamber-retry" hidden class="px-3 py-1 border border-gold text-gold" data-i18n="common.retry">Retry</button>
+      <button type="button" id="chamber-retry" hidden class="btn" data-i18n="common.retry">Retry</button>
     </div>
 
     <div id="chamber-body" hidden>
-      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 min-w-0">
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 min-w-0 xl:grid-cols-[5fr_7fr]">
         <TerminalPanel />
         <div class="grid gap-3 content-start min-w-0">
           <ResurrectedCard />
           <div id="chamber-actions" hidden class="grid gap-2 justify-start">
-            <button type="button" id="chamber-resurrect" hidden class="px-4 py-2 border border-gold text-gold" data-i18n="chamber.resurrect">Resurrect</button>
+            <button type="button" id="chamber-resurrect" hidden class="btn-terminal" data-i18n="chamber.resurrect">Resurrect</button>
             <div id="chamber-guest" hidden class="grid gap-2 justify-start">
               <p data-i18n="chamber.login_prompt">Log in as a judge to resurrect this record.</p>
-              <button type="button" id="chamber-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+              <button type="button" id="chamber-login" class="btn" data-i18n="nav.login">Judge login</button>
             </div>
           </div>
         </div>

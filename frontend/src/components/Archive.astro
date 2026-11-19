@@ -1,39 +1,39 @@
 ---
 ---
-<section class="ps-4 pe-4 py-6 max-w-5xl mx-auto" aria-labelledby="archive-heading">
+<section aria-labelledby="archive-heading">
   <h1 id="archive-heading" class="text-4xl" data-i18n="app.name">NecroMARC</h1>
   <p class="mb-6" data-i18n="app.tagline">Resurrect dead library records</p>
 
-  <form id="archive-form" class="grid gap-3 border border-gold/60 p-4" role="search">
+  <form id="archive-form" class="surface-1 grid gap-3 p-4" role="search">
     <label class="grid gap-1">
       <span data-i18n="archive.search.label">Search the archive</span>
-      <input id="f-q" name="q" type="search" class="bg-ink border border-gold text-parchment p-2"
+      <input id="f-q" name="q" type="search" class="field"
         data-i18n-attr="placeholder:archive.search.placeholder" />
     </label>
     <fieldset class="grid gap-3 sm:grid-cols-2">
       <legend class="mb-1" data-i18n="archive.filters">Filters</legend>
       <label class="grid gap-1"><span data-i18n="archive.filter.title">Title</span>
-        <input id="f-title" name="title" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <input id="f-title" name="title" type="text" class="field" /></label>
       <label class="grid gap-1"><span data-i18n="archive.filter.author">Author</span>
-        <input id="f-author" name="author" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <input id="f-author" name="author" type="text" class="field" /></label>
       <label class="grid gap-1"><span data-i18n="archive.filter.era_from">Era from (year)</span>
-        <input id="f-era-from" name="era_from" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <input id="f-era-from" name="era_from" type="text" inputmode="numeric" dir="ltr" class="field" /></label>
       <label class="grid gap-1"><span data-i18n="archive.filter.era_to">Era to (year)</span>
-        <input id="f-era-to" name="era_to" type="text" inputmode="numeric" dir="ltr" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <input id="f-era-to" name="era_to" type="text" inputmode="numeric" dir="ltr" class="field" /></label>
       <label class="grid gap-1 sm:col-span-2"><span data-i18n="archive.filter.topic">Topic</span>
-        <input id="f-topic" name="topic" type="text" class="bg-ink border border-gold text-parchment p-2" /></label>
+        <input id="f-topic" name="topic" type="text" class="field" /></label>
     </fieldset>
     <p id="form-error" role="alert" hidden class="text-decay-red"></p>
     <div class="flex gap-2">
-      <button type="submit" class="px-4 py-2 border border-gold text-gold" data-i18n="archive.search.submit">Search</button>
-      <button type="button" id="f-clear" class="px-4 py-2 border border-gold text-gold" data-i18n="archive.filters.clear">Clear filters</button>
+      <button type="submit" class="btn px-4 py-2" data-i18n="archive.search.submit">Search</button>
+      <button type="button" id="f-clear" class="btn px-4 py-2" data-i18n="archive.filters.clear">Clear filters</button>
     </div>
   </form>
 
-  <div id="semantic-slot" class="mt-4 border border-ai-violet/70 p-4">
+  <div id="semantic-slot" class="surface-1 mt-4 p-4" style="border-inline-start: 3px solid var(--color-ai-violet)">
     <p id="semantic-guest" class="flex flex-wrap items-center gap-3">
       <span data-i18n="archive.semantic.guest">Semantic search is available to judges.</span>
-      <button type="button" id="semantic-login" class="px-3 py-1 border border-gold text-gold" data-i18n="nav.login">Judge login</button>
+      <button type="button" id="semantic-login" class="btn px-3 py-1" data-i18n="nav.login">Judge login</button>
     </p>
     <p id="semantic-judge" hidden>
       <span data-i18n="archive.semantic.judge">Semantic search is unlocked.</span>
@@ -44,15 +44,15 @@
   <p id="status" role="status" aria-live="polite" class="mt-4"></p>
   <div id="error-box" role="alert" hidden class="mt-4 border border-decay-red p-3">
     <p id="error-text" class="text-decay-red"></p>
-    <button type="button" id="retry" class="mt-2 px-3 py-1 border border-gold text-gold" data-i18n="common.retry">Retry</button>
+    <button type="button" id="retry" class="mt-2 btn px-3 py-1" data-i18n="common.retry">Retry</button>
   </div>
 
-  <ul id="record-list" class="mt-4 grid gap-4 list-none p-0" aria-busy="false"></ul>
+  <ul id="record-list" class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-gutter list-none p-0" aria-busy="false"></ul>
 
   <nav id="pager" class="mt-6 flex items-center justify-between" aria-label="Pagination" data-i18n-attr="aria-label:archive.pager.label" hidden>
-    <button type="button" id="prev" class="px-3 py-1 border border-gold text-gold" data-i18n="archive.pager.prev">Previous</button>
+    <button type="button" id="prev" class="btn px-3 py-1" data-i18n="archive.pager.prev">Previous</button>
     <span id="page-info"></span>
-    <button type="button" id="next" class="px-3 py-1 border border-gold text-gold" data-i18n="archive.pager.next">Next</button>
+    <button type="button" id="next" class="btn px-3 py-1" data-i18n="archive.pager.next">Next</button>
   </nav>
 </section>
 <script>

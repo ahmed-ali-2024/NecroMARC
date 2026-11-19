@@ -6,8 +6,8 @@
     role="dialog"
     aria-modal="true"
     aria-labelledby="login-title"
-    class="w-full max-w-sm border border-gold bg-ink text-parchment p-6">
-    <h2 id="login-title" class="text-xl mb-4" data-i18n="login.title">Judge login</h2>
+    class="surface-2 w-full max-w-[24rem] text-parchment p-6">
+    <h2 id="login-title" class="text-xl text-gold mb-4" data-i18n="login.title">Judge login</h2>
     <form id="login-form" autocomplete="off" novalidate>
       <div class="mb-3">
         <label for="login-username" class="block mb-1" data-i18n="login.username">Username</label>
@@ -17,7 +17,7 @@
           type="text"
           autocomplete="off"
           required
-          class="w-full border border-gold bg-transparent ps-2 pe-2 py-1" />
+          class="field w-full ps-2 pe-2 py-1" />
       </div>
       <div class="mb-3">
         <label for="login-password" class="block mb-1" data-i18n="login.password">Password</label>
@@ -27,19 +27,19 @@
           type="password"
           autocomplete="off"
           required
-          class="w-full border border-gold bg-transparent ps-2 pe-2 py-1" />
+          class="field w-full ps-2 pe-2 py-1" />
       </div>
-      <p id="login-error" role="alert" hidden class="mb-3 text-decay-red"></p>
+      <p id="login-error" role="alert" hidden class="tag-decay mb-3"></p>
       <div class="flex gap-3 justify-end">
         <button
           type="button"
           id="login-cancel"
-          class="px-3 py-1 border border-gold text-gold"
+          class="btn px-3 py-1"
           data-i18n="login.cancel">Cancel</button>
         <button
           type="submit"
           id="login-submit"
-          class="px-3 py-1 border border-gold text-gold disabled:opacity-50"
+          class="btn px-3 py-1 disabled:opacity-50"
           data-i18n="login.submit">Log in</button>
       </div>
     </form>

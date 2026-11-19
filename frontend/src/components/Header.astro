@@ -1,32 +1,43 @@
 ---
 import LanguageToggle from './LanguageToggle.astro';
 const base = import.meta.env.BASE_URL.replace(/\/+$/, '');
+const norm = (p: string) => p.replace(/\/+$/, '') || '/';
+const current = norm(Astro.url.pathname);
+const cur = (href: string) => (norm(href) === current ? 'page' : undefined);
 ---
-<header class="border-b border-gold/60 ps-4 pe-4 py-3">
-  <div class="flex flex-wrap items-center gap-3">
-    <a href={`${base}/`} class="text-2xl font-semibold me-auto" data-i18n="app.name">NecroMARC</a>
-    <nav aria-label="Main" data-i18n-attr="aria-label:shell.nav.label" class="flex items-center gap-4">
-      <a href={`${base}/`} data-i18n="shell.nav.archive">Archive</a>
-      <a href={`${base}/summon/`} data-i18n="nav.summon">Summon</a>
-      <a href={`${base}/graph/`} data-i18n="nav.graph">Graph</a>
-      <a href={`${base}/about/`} data-i18n="nav.about">About</a>
+<header class="ps-margin-mobile pe-margin-mobile md:ps-margin md:pe-margin">
+  <div class="flex flex-wrap items-center gap-3 min-block-20">
+    <a href={`${base}/`} class="flex items-center gap-2 me-auto">
+      <span class="flex items-center justify-center size-9 border border-gold text-gold">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M12 6.5C10.5 5.3 8 4.5 4 4.5v13c4 0 6.5.8 8 2 1.5-1.2 4-2 8-2v-13c-4 0-6.5.8-8 2z" />
+          <path d="M12 6.5v13" />
+        </svg>
+      </span>
+      <span class="font-serif text-2xl font-semibold text-gold" data-i18n="app.name">NecroMARC</span>
+    </a>
+    <nav aria-label="Main" data-i18n-attr="aria-label:shell.nav.label" class="flex flex-wrap items-center gap-4 uppercase tracking-widest">
+      <a href={`${base}/`} aria-current={cur(`${base}/`)} data-i18n="shell.nav.archive">Archive</a>
+      <a href={`${base}/summon/`} aria-current={cur(`${base}/summon/`)} data-i18n="nav.summon">Summon</a>
+      <a href={`${base}/graph/`} aria-current={cur(`${base}/graph/`)} data-i18n="nav.graph">Graph</a>
+      <a href={`${base}/about/`} aria-current={cur(`${base}/about/`)} data-i18n="nav.about">About</a>
     </nav>
     <div class="flex items-center">
       <button
         type="button"
         id="judge-login"
-        class="px-3 py-1 border border-gold text-gold"
+        class="btn px-3 py-1"
         data-i18n="nav.login">Judge login</button>
       <button
         type="button"
         id="judge-logout"
         hidden
-        class="px-3 py-1 border border-gold text-gold"
+        class="btn px-3 py-1"
         data-i18n="nav.logout">Log out</button>
       <LanguageToggle />
     </div>
   </div>
-  <p id="session-expired" role="status" hidden class="mt-2 text-decay-red" data-i18n="shell.session_expired">
+  <p id="session-expired" role="status" hidden class="tag-decay" data-i18n="shell.session_expired">
     Your session expired. Please log in again.
   </p>
 </header>

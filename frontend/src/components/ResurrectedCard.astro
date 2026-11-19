@@ -2,22 +2,102 @@
 // Shell only. Fill it with renderCard/runResurrection from lib/card.ts.
 ---
 <section
-  class="resurrected-card min-w-0 p-4 border border-gold"
+  class="resurrected-card surface-2 min-w-0 p-lg"
   data-resurrected-card
   aria-live="polite"
 >
   <p class="card-placeholder" data-i18n="card.placeholder">The resurrected card appears here.</p>
 </section>
 <style is:global>
-  .resurrected-card { background: var(--color-ink); color: var(--color-parchment); overflow-wrap: anywhere; }
-  .card-title, .card-heading { color: var(--color-gold); }
-  .card-subjects, .card-decay-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .card-badge { border: 1px solid var(--color-gold); padding-inline: 0.5rem; }
-  .card-ai { color: var(--color-ai-violet); border: 1px solid var(--color-ai-violet); padding-inline: 0.25rem; font-style: italic; }
-  .card-meter-track { block-size: 0.75rem; border: 1px solid var(--color-gold); }
-  .card-meter-fill { block-size: 100%; background: var(--color-phosphor); }
-  .card-export-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-  .card-export-link { border: 1px solid var(--color-gold); padding: 0.25rem 0.75rem; color: var(--color-gold); }
+  .resurrected-card { color: var(--color-parchment); overflow-wrap: anywhere; display: grid; gap: var(--spacing-md); align-content: start; }
+  .resurrected-card > * { margin: 0; min-inline-size: 0; }
+  .card-placeholder { color: var(--color-muted); font-family: var(--font-sans); }
+  .card-title { font-family: var(--font-serif); font-size: 1.75rem; font-weight: 600; line-height: 1.2; color: var(--color-gold); }
+  .card-heading { font-family: var(--font-label); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-gold); }
+  .card-summary { font-family: var(--font-sans); line-height: 1.6; }
+  .card-meta { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-muted); }
+  .card-subjects, .card-decay-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+  .card-decay-list:empty { min-block-size: 0; }
+  .card-badge {
+    display: inline-block;
+    padding-block: 0.125rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background-color: rgba(212, 175, 55, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 0;
+    color: var(--color-gold);
+  }
+  .card-ai {
+    display: inline-block;
+    padding-block: 0.125rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-label);
+    font-size: 0.75rem;
+    font-style: italic;
+    background-color: rgba(168, 85, 247, 0.12);
+    border: 1px solid var(--color-ai-violet);
+    border-radius: 0;
+    color: var(--color-ai-violet-text);
+  }
+  .card-meter { display: grid; gap: var(--spacing-xs); }
+  .card-meter-label { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-muted); }
+  .card-meter-track {
+    block-size: 6px;
+    background-color: #101813;
+    border: 1px solid rgba(57, 255, 20, 0.2);
+    border-radius: 0;
+    overflow: hidden;
+  }
+  .card-meter-fill { block-size: 100%; background-color: var(--color-phosphor); box-shadow: 0 0 8px rgba(57, 255, 20, 0.5); }
+  .card-ai-fields { font-family: var(--font-mono); font-size: 0.75rem; color: var(--color-ai-violet-text); }
+  .card-decay { display: grid; gap: var(--spacing-sm); }
+  .card-decay-score { font-family: var(--font-mono); color: var(--color-parchment); }
+  .card-decay-item {
+    display: inline-block;
+    padding-block: 0.125rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--color-decay-red);
+    border-radius: 0;
+    color: var(--color-decay-text);
+  }
+  .card-export-buttons { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); }
+  .card-export-link {
+    display: inline-flex;
+    align-items: center;
+    padding-block: 0.5rem;
+    padding-inline: 1rem;
+    background-color: transparent;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 0;
+    color: var(--color-muted);
+    font-family: var(--font-label);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+  .card-export-link:hover, .card-export-link:focus-visible { border-color: rgba(212, 175, 55, 0.5); color: var(--color-parchment); }
   .card-export-link[aria-disabled='true'] { opacity: 0.5; pointer-events: none; }
-  .card-error, .card-export-error { color: var(--color-decay-red); }
+  .card-error, .card-export-error {
+    display: inline-block;
+    padding-block: 0.125rem;
+    padding-inline: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--color-decay-red);
+    border-radius: 0;
+    color: var(--color-decay-text);
+  }
+  .card-export-error[hidden] { display: none; }
+  @media (max-width: 767px) {
+    .card-export-link { min-block-size: 2.75rem; }
+  }
 </style>
