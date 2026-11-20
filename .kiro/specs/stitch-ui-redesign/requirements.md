@@ -4,6 +4,8 @@
 
 This feature applies the Google Stitch visual identity ("NecroMARC Archival Telemetry", sources in `docs/new_ui/`) to the NecroMARC Astro frontend. The change is presentation only: layout, cards, borders, gradients, spacing, typography and color. Application logic, API calls, routes, `frontend/src/lib/*.ts` behavior, and backend code stay unchanged.
 
+Note: the Stitch sources in `docs/new_ui/` were removed from the working tree after this redesign was implemented (commit `cb196b6`). They remain available in git history, for example at commit `88e4e7b` (`git show 88e4e7b:docs/new_ui/necromarc_archival_telemetry/DESIGN.md`).
+
 The Stitch design defines: Dark Archival Luxury with Retro-Phosphor Telemetry; zero-radius corners; gold hairline borders at 30% opacity; tonal surface tiers (canvas, card, active, terminal); a fixed top header with gold active-tab underline; a 5:7 or 6:6 two-column workstation on wide screens; EB Garamond for titles, Inter for interface text, IBM Plex Mono for MARC and telemetry; phosphor vitality bars; gold topic chips, violet AI provenance badges, and crimson decay tags.
 
 Constraints inherited from the project and from existing automated tests:

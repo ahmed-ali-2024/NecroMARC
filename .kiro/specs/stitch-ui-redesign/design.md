@@ -4,6 +4,8 @@
 
 This design applies the Stitch "NecroMARC Archival Telemetry" identity (`docs/new_ui/necromarc_archival_telemetry/DESIGN.md` and the three `code.html` exports) to the Astro frontend in `frontend/`. The work is presentation only. It touches markup classes, `global.css`, component-local `<style is:global>` blocks, `theme.ts`, and two font dependencies.
 
+Note: the Stitch source files under `docs/new_ui/` were removed from the working tree after this redesign was implemented (commit `cb196b6`). They remain available in git history, for example at commit `88e4e7b`: `git show 88e4e7b:docs/new_ui/necromarc_archival_telemetry/DESIGN.md`.
+
 The central design problem is that much of the DOM is built by code that Requirement 1 forbids editing. The archive cards are created by an inline `<script>` in `Archive.astro`. The resurrected card is built by `lib/card.ts`. The terminal lines are built by `lib/terminal.ts`. The Uploader and SemanticSearch result rows are built by inline scripts. All of these assign fixed class names such as `border border-gold/60 p-4 grid gap-2`. The design therefore uses two styling channels:
 
 1. **Static markup** (Astro templates): the template classes are edited directly. Redundant color and border utilities are replaced with semantic classes (`btn`, `field`, `surface-1`, and so on).
