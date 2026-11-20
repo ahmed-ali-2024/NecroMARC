@@ -184,3 +184,7 @@ It fetches records from Project Gutenberg and the Library of Congress SRU servic
 ## Kiro
 
 The project is built with Kiro. The spec lives in `.kiro/specs/necromarc/`. A `PostFileSave` hook runs the parser tests (including the Hypothesis property tests) whenever a file under `backend/parser/` is saved.
+
+## License
+
+Released under the [MIT License](LICENSE).
