@@ -37,6 +37,9 @@ def create_app(settings, records_repo=None) -> Flask:
     from backend.ai.pipeline import build_pipeline
     app.extensions["resurrection_pipeline"] = build_pipeline(
         settings, lambda: app.extensions["records_repo"])
+    # Sample pool batches are stored under source 'sample' (Requirement 20.6).
+    app.extensions["sample_pipeline"] = build_pipeline(
+        settings, lambda: app.extensions["records_repo"], source="sample")
     from backend.ai.gemini import GeminiEmbeddingClient
     app.extensions["embedder"] = GeminiEmbeddingClient(settings.gemini_api_key,
                                                        settings.gemini_embedding_model)

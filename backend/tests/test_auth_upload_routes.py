@@ -6,7 +6,7 @@ from backend.ratelimit.limiter import InMemoryRateLimiter
 from backend.tests.test_app_factory import ENV
 from backend.parser.printer import print_iso2709
 from backend.parser.model import Field, ParsedRecord, Subfield
-from backend.scripts.build_sample_tomb import RECORDS
+from backend.scripts.build_sample_tomb import POOL_IDS
 
 
 def _client(env=None, limiter=None):
@@ -106,6 +106,8 @@ def test_upload_rate_limited_and_fail_closed():
 def test_sample_tomb():
     c, _, _ = _client()
     r = c.get("/api/samples/tomb")
-    assert r.status_code == 200 and r.json["filename"] == "tomb.mrc"
-    assert r.json["count"] == len(RECORDS) <= 5
+    assert r.status_code == 200 and r.json["filename"] == "sample_pool.mrc"
+    assert r.json["count"] == 4 <= 5
+    assert r.json["total"] == len(POOL_IDS) and r.json["remaining"] == len(POOL_IDS)
+    assert r.json["exhausted"] is False
     assert all("decay" in x and "record" in x for x in r.json["records"])

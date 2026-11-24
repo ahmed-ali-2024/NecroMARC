@@ -1,34 +1,52 @@
-# NecroMARC static frontend, deployed to public_html/necromarc/.
+# NecroMARC static frontend, deployed to public_html/necromarc/ (LiteSpeed host).
 # The api/ subdirectory holds the cPanel Passenger .htaccess and is a separate
 # file; never overwrite it when uploading dist/.
+#
+# This is the configuration verified on the production server. An earlier
+# version relied on DirectoryIndex alone and denied dotfiles with
+# <FilesMatch "^\."> and a "(^|/)\." rewrite rule; on this LiteSpeed host every
+# directory URL (/necromarc/, /necromarc/chamber/) then returned 403 while the
+# index.html files themselves were reachable. Directory URLs are therefore
+# mapped to index.html explicitly below, and dotfiles are denied by name.
 
-Options -Indexes
 DirectoryIndex index.html
+Options -Indexes
 
-# --- HTTPS redirect ---
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # Leave the Passenger API mount alone.
+  RewriteRule ^api(/|$) - [L]
+
+  # HTTP to HTTPS.
   RewriteCond %{HTTPS} !=on
-  RewriteCond %{HTTP:X-Forwarded-Proto} !https [NC]
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Deny dotfiles and dot-directories (.env, .git, ...). Keep ACME challenges.
-  RewriteCond %{REQUEST_URI} !^/\.well-known/ [NC]
-  RewriteRule (^|/)\.(?!well-known) - [F,L]
-
-  # Trailing slash: every route is a real directory index (no SPA fallback).
-  # api/ is the Passenger application mount; leave it to the API.
-  RewriteCond %{REQUEST_URI} !^/necromarc/api
+  # Directories get a trailing slash (every route is a real directory).
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteCond %{REQUEST_URI} !/$
   RewriteRule ^(.*)$ %{REQUEST_URI}/ [L,R=301]
+
+  # /necromarc/ -> index.html
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  RewriteRule ^$ index.html [L]
+
+  # /necromarc/<route>/ -> <route>/index.html
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteCond %{REQUEST_FILENAME}/index.html -f
+  RewriteRule ^(.*)/$ $1/index.html [L]
 </IfModule>
 
-<FilesMatch "^\.">
+# Deny the files that must never be downloadable, by name.
+# .ftp-deploy-sync-state.json is written by the GitHub Actions FTP deploy.
+<Files ".ftp-deploy-sync-state.json">
   Require all denied
-</FilesMatch>
+</Files>
+<Files ".htaccess.bak">
+  Require all denied
+</Files>
 
-# --- Caching ---
 <IfModule mod_headers.c>
   # Hashed build assets are immutable.
   <If "%{REQUEST_URI} =~ m#/_astro/#">
@@ -39,7 +57,7 @@ DirectoryIndex index.html
     Header set Cache-Control "no-cache"
   </FilesMatch>
 
-  # --- Security headers ---
+  # Security headers.
   Header always set X-Content-Type-Options "nosniff"
   Header always set Referrer-Policy "same-origin"
   Header always set Content-Security-Policy "default-src 'self'; connect-src 'self' https://3aai.in; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'"

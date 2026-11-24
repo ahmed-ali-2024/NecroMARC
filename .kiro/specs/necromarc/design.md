@@ -32,7 +32,7 @@ MARC 21 is an actively maintained Library of Congress standard. The problem addr
 | ID | Issue | Proposed handling in this design |
 |----|-------|----------------------------------|
 | O1 | Requirement 19.4 wants hook failure output visible, but a `PostFileSave` command hook only forwards stdout for some triggers. | The command is wrapped to also write `.kiro/hooks/last-run.log`. A companion `agent` hook may be added if the runner does not surface output. |
-| O2 | Requirement 9.4 does not give the status code for a fully failed batch. | HTTP 502 with code `BATCH_FAILED` and the per-record results attached. |
+| O2 | Requirement 9.4 does not give the status code for a fully failed batch. | HTTP 422 with code `BATCH_FAILED` and the per-record results attached. 502 was used first, but the Cloudflare and LiteSpeed chain in front of the API can replace 5xx bodies with an HTML page, which hid the JSON from the frontend. |
 | O3 | Requirement 15.1 sources: exact Project Gutenberg and LoC SRU endpoints are not fixed in the requirements. | Config variables `GUTENBERG_MARC_URL_TEMPLATE` and `LOC_SRU_URL`. Endpoints are confirmed during implementation. |
 
 ## Architecture
@@ -203,7 +203,7 @@ backend/
     decorators.py              # judge_required
   ratelimit/
     limiter.py                 # RateLimiter.hit(key) -> RateDecision
-  samples/tomb.mrc             # Sample_Tomb (<= 5 records)
+  samples/sample_pool.mrc      # Sample pool: 50 decayed PGA records (necro-sample-001..050)
   scripts/seed/
     __main__.py                # `python -m backend.scripts.seed`
     sources.py synthetic.py report.py   # synthetic 'truncated record' = truncated field content, valid ISO 2709 framing
@@ -562,7 +562,9 @@ All paths are relative to the public base `https://3aai.in/necromarc`. All JSON 
 | 422 | `RECORD_TOO_LARGE`, `UNPARSEABLE_FILE` | export, upload |
 | 429 | `RATE_LIMITED` (header `Retry-After: <seconds >= 1>`) | login, judge routes |
 | 500 | `INTERNAL_ERROR` | all |
-| 502 | `BATCH_FAILED`, `UPSTREAM_UNAVAILABLE` | resurrect, semantic search |
+| 422 | `BATCH_FAILED` (every record in the batch failed; `results` and `summary` attached) | resurrect |
+| 400 | `INVALID_SAMPLE` (a `source: "sample"` record is not in the sample pool) | resurrect |
+| 502 | `UPSTREAM_UNAVAILABLE` | semantic search |
 | 503 | `SERVICE_UNAVAILABLE` | any route when the database is unreachable (rate-limit check fails closed) |
 
 Shared schemas (JSON Schema draft-07 fragments):
@@ -726,8 +728,8 @@ sequenceDiagram
 
 #### `POST /api/resurrect` (Judge)
 
-* Request: `{"records": ["RawRecord", ...]}` with `minItems: 1`, `maxItems: 5` expressed in code (so the over-limit case is `413`, not `400`). The server recomputes derived values from `leader`, `fields`, and `anomalies` only.
-* Order: authenticate, rate limit, `0` records `400 EMPTY_BATCH` (no upstream call, 9.6), more than 5 `413 BATCH_TOO_LARGE` (no processing, no upstream call, 9.5), validate each record against `RawRecord` (`400 VALIDATION_ERROR` with the index).
+* Request: `{"records": ["RawRecord", ...], "source": "upload" | "sample"}` (`source` optional, default `upload`; any other value `400 VALIDATION_ERROR`) with `minItems: 1`, `maxItems: 5` expressed in code (so the over-limit case is `413`, not `400`). The server recomputes derived values from `leader`, `fields`, and `anomalies` only.
+* Order: authenticate, rate limit, `0` records `400 EMPTY_BATCH` (no upstream call, 9.6), more than 5 `413 BATCH_TOO_LARGE` (no processing, no upstream call, 9.5), validate each record against `RawRecord` (`400 VALIDATION_ERROR` with the index), then for `source: "sample"` require every record's control number to belong to the bundled sample pool (`400 INVALID_SAMPLE`, no pipeline call). Sample batches run through `app.extensions["sample_pipeline"]`, which stores rows under source `sample`; other batches use `resurrection_pipeline` (source `upload`).
 * Each record is processed independently and in submitted order. Results preserve order.
 * `200` (at least one success):
 
@@ -739,14 +741,19 @@ sequenceDiagram
  "summary": {"submitted": 2, "succeeded": 1, "failed": 1}}
 ```
 
-* `502 BATCH_FAILED` when every record fails: `{"error": {"code": "BATCH_FAILED", "message": "The batch produced no successful results."}, "results": [...], "summary": {...}}`.
+* `422 BATCH_FAILED` when every record fails: `{"error": {"code": "BATCH_FAILED", "message": "The batch produced no successful results."}, "results": [...], "summary": {...}}`.
 * A failed LLM stage stores the record with `status='failed'` through `store_failure` (raw data unchanged) when it has a `control_number`, and returns the per-record failure.
 * Records are processed with a `ThreadPoolExecutor(max_workers=5)` so one slow record does not delay the others. The per-record pipeline is: decay, LLM, schema validation, healing, vitality, embedding (failure tolerated), edge candidates and semantic matches, atomic `store_resurrection`.
 
 #### `GET /api/samples/tomb`
 
-* Auth: none (it only returns bundled data and spends no credits).
-* `200`: `{"filename": "tomb.mrc", "records": [{"index": 0, "record": "RawRecord", "decay": {...}}], "count": 5}` generated by parsing the bundled `backend/samples/tomb.mrc` (<= 5 records). "Summon & Resurrect Sample Tomb" fetches this, then posts `records[*].record` to `/api/resurrect`.
+* Auth: none (it returns bundled data, spends no credits, and does one read of the database).
+* The bundled `backend/samples/sample_pool.mrc` holds 50 real public-domain records from Project Gutenberg Australia MARC files, decayed on purpose by `backend/scripts/build_sample_tomb.py` (520 removed and one or more of: 650 removed, 100 `$d` removed, broken 008 year, short 008). Control numbers are `necro-sample-001`..`050`; the original number is kept in `035 $a (PGA)<orig>`.
+* The route reads the control numbers already resurrected under source `sample` (`RecordsRepo.resurrected_control_numbers("sample")`), removes them from the pool, and draws `min(4, remaining)` records at random without repetition.
+* `200`: `{"filename": "sample_pool.mrc", "records": [{"index": 0, "record": "RawRecord", "decay": {...}, "title": "...", "control_number": "necro-sample-007"}], "count": 4, "total": 50, "remaining": 46, "exhausted": false}`. `exhausted` is true exactly when `remaining` is 0, and then `records` is empty.
+* `503` when the database is unreachable.
+* "Summon & Resurrect Sample Tomb" fetches this, then posts `records[*].record` to `/api/resurrect` with `source: "sample"`. When `exhausted` is true the frontend shows a message and links (archive, MARC sources) and sends nothing.
+* Two judges at the same moment can draw overlapping records; the overlap fails as `DUPLICATE_RESURRECTED` and is reported per record.
 
 ## Data Models
 
@@ -1125,6 +1132,32 @@ Persistence payload sent to `store_resurrection` (`p_record`):
 
 `p_edges` is `[{"other_id": "uuid", "edge_type": "SAME_AUTHOR", "weight": 1.0}]`.
 
+#### `20260101000007_sample_reset.sql`
+
+```sql
+-- Sample pool refill (Requirement 20.9-20.11). Deletes only source = 'sample' rows.
+create or replace function public.preview_sample_reset()
+returns table (status text, records bigint, edges bigint)
+language sql stable security definer set search_path = public as $$ ... $$;
+
+create or replace function public.reset_sample_records()
+returns integer
+language plpgsql security definer set search_path = public as $$
+declare n integer;
+begin
+  delete from public.marc_records where source = 'sample';
+  get diagnostics n = row_count;
+  return n;
+end $$;
+
+revoke execute on function public.preview_sample_reset(), public.reset_sample_records()
+  from public, anon, authenticated;
+grant execute on function public.preview_sample_reset(), public.reset_sample_records()
+  to service_role;
+```
+
+Knowledge edges that touch a deleted sample row are removed by the existing `on delete cascade`, including edges to non-sample records; the non-sample records themselves are unchanged. The admin command `python -m backend.scripts.reset_samples` calls `preview_sample_reset` by default (dry run) and `reset_sample_records` only with `--confirm`.
+
 When the uploaded record has no usable `control_number` (no 001), the API assigns `control_number = "sha256:" + hex(sha256(canonical raw JSON))[:32]` so that the `(source, control_number)` uniqueness check still works. Re-resurrecting the same bytes therefore resolves to the same row.
 
 
@@ -1417,7 +1450,7 @@ flowchart LR
 
 ### Property 27: Batch independence and order
 
-*For any* batch of 1 to 5 records with random per-record outcomes, the response has one result per submitted record in submitted order, each marked success or failure, successful records are persisted even when others fail, and a batch where every record fails returns `BATCH_FAILED` with per-record failures. *For any* batch of more than 5 records the response is `413` and neither OpenRouter nor Gemini is called, and an empty batch is rejected without upstream calls.
+*For any* batch of 1 to 5 records with random per-record outcomes, the response has one result per submitted record in submitted order, each marked success or failure, successful records are persisted even when others fail, and a batch where every record fails returns HTTP 422 `BATCH_FAILED` with per-record failures. *For any* batch of more than 5 records the response is `413` and neither OpenRouter nor Gemini is called, and an empty batch is rejected without upstream calls.
 
 **Validates: Requirements 9.2, 9.3, 9.4, 9.5, 9.6**
 
@@ -1475,6 +1508,18 @@ flowchart LR
 
 **Validates: Requirements 13.11**
 
+### Property 36: Sample selection
+
+*For any* set of already resurrected sample control numbers, `GET /api/samples/tomb` returns no resurrected control number and no repeated record, `count` equals `min(4, remaining)`, `remaining` equals the pool size minus the resurrected pool members, and `exhausted` is true exactly when `remaining` is 0.
+
+**Validates: Requirements 20.3, 20.4**
+
+### Property 37: Reset scoping
+
+*For any* mix of stored records across sources, a confirmed sample reset removes exactly the rows whose source is `sample`, leaves every other row unchanged, and returns the number removed; without confirmation nothing is removed.
+
+**Validates: Requirements 20.9, 20.10**
+
 ## Error Handling
 
 | Situation | Behavior |
@@ -1489,7 +1534,7 @@ flowchart LR
 | Upload or batch too large | `413 PAYLOAD_TOO_LARGE` or `413 BATCH_TOO_LARGE` before parsing or upstream calls. |
 | OpenRouter failure, all models | Per-record failure `ALL_MODELS_UNAVAILABLE`, record stored as `failed` with raw data unchanged. |
 | LLM output invalid after one retry | Per-record failure `VALIDATION_FAILED`, same storage rule. |
-| Every record in a batch failed | `502 BATCH_FAILED` with per-record failures. |
+| Every record in a batch failed | `422 BATCH_FAILED` with per-record failures and the summary. |
 | Gemini failure or wrong vector length | Record stored with `embedding = null`, resurrection completes, `embedding_stored: false`. Semantic search returns `502 UPSTREAM_UNAVAILABLE`. |
 | Atomic write fails | `store_resurrection` rolls back, record unchanged, per-record `STORE_FAILED`. |
 | Record already resurrected | Per-record failure `DUPLICATE_RESURRECTED`, existing row unchanged. |

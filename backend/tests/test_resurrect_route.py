@@ -76,13 +76,13 @@ def test_success_order_and_duplicate_guard():
     assert len(calls) == 1 and len(calls[0]) == 1
 
 
-def test_all_failed_is_502():
+def test_all_failed_is_422():
     repo = FakeRecordsRepo(())
     repo.add({"source": "upload", "control_number": "dup", "status": "resurrected"})
     calls = []
     c, h, _ = _client(pipeline=ok_pipeline(calls), repo=repo)
     r = c.post("/api/resurrect", headers=h, json={"records": [rec("dup")]})
-    assert r.status_code == 502 and r.json["error"]["code"] == "BATCH_FAILED" and not calls
+    assert r.status_code == 422 and r.json["error"]["code"] == "BATCH_FAILED" and not calls
 
 
 def test_rate_limit_and_fail_closed():

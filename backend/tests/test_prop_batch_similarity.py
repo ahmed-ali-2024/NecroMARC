@@ -50,7 +50,7 @@ def test_batch_independence_order_and_summary(fail_flags, n_dupes):
             assert x["status"] == "success" and x["id"] == f"c{i}"  # one failure never alters another
     assert r.json["summary"] == {"submitted": n, "succeeded": len(expected_ok),
                                  "failed": n - len(expected_ok)}
-    assert r.status_code == (200 if expected_ok else 502)
+    assert r.status_code == (200 if expected_ok else 422)
     # Duplicates never reach the pipeline.
     sent = [x for call in calls for x in call]
     assert all(x["fields"][0]["data"] not in {f"c{i}" for i in dupes} for x in sent)

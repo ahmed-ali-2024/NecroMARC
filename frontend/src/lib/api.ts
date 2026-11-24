@@ -1,3 +1,4 @@
+import { hasKey } from '../i18n/i18n';
 import { expireSession, getToken } from './auth';
 
 /** Typed client for the NecroMARC API. The only module that calls `fetch`. */
@@ -31,9 +32,13 @@ export class ApiError extends Error {
   }
 }
 
-/** Map an `error.code` to an i18n key. */
+/**
+ * Map an `error.code` to an i18n key. A code without a translation maps to `error.unknown`,
+ * so the UI never shows a raw key such as `error.SOMETHING` (Requirement 20.8).
+ */
 export function errorKey(code: string | null | undefined): string {
-  return code ? `error.${code}` : 'error.unknown';
+  const key = `error.${code}`;
+  return code && hasKey(key) ? key : 'error.unknown';
 }
 
 function env(): Record<string, string | undefined> {
@@ -273,10 +278,17 @@ export interface ResurrectResponse {
   results: ResurrectResult[];
   summary: { submitted: number; succeeded: number; failed: number };
 }
+export type ResurrectSource = 'upload' | 'sample';
 export interface TombResponse {
   filename: string;
-  records: { index: number; record: RawRecord; decay: Decay }[];
+  records: { index: number; record: RawRecord; decay: Decay; title?: string | null; control_number?: string | null }[];
   count: number;
+  /** Sample pool size. Optional: an older backend does not send the pool fields. */
+  total?: number;
+  /** Pool records not yet resurrected. */
+  remaining?: number;
+  /** True when every pool record has been resurrected. */
+  exhausted?: boolean;
 }
 export type ExportFormat = 'mrc' | 'marcxml' | 'jsonld';
 
@@ -331,17 +343,23 @@ export const uploadMrc = (file: Blob, filename = 'upload.mrc'): Promise<UploadRe
   return request('/upload-mrc', { method: 'POST', auth: true, form });
 };
 
-/** Uses PUBLIC_RESURRECT_TIMEOUT_MS (default 120000) as its timeout (11.10). */
+/**
+ * Uses PUBLIC_RESURRECT_TIMEOUT_MS (default 120000) as its timeout (11.10).
+ * The second argument is an AbortSignal (existing callers) or `{ signal, source }`.
+ * `source: 'sample'` stores the records under the sample pool (Requirement 20.6).
+ */
 export const resurrect = (
   records: RawRecord[],
-  signal?: AbortSignal,
-): Promise<ResurrectResponse> =>
-  request('/resurrect', {
+  opts?: AbortSignal | { signal?: AbortSignal; source?: ResurrectSource },
+): Promise<ResurrectResponse> => {
+  const o = opts instanceof AbortSignal ? { signal: opts } : (opts ?? {});
+  return request('/resurrect', {
     method: 'POST',
     auth: true,
-    json: { records },
+    json: o.source ? { records, source: o.source } : { records },
     timeoutMs: resurrectTimeoutMs(),
-    signal,
+    signal: o.signal,
   });
+};
 
 export const getTomb = (): Promise<TombResponse> => request('/samples/tomb');

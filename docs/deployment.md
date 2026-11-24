@@ -100,7 +100,7 @@ PUBLIC_BASE_PATH=/necromarc PUBLIC_API_URL=https://3aai.in/necromarc/api npm run
 
 Upload the **contents** of `frontend/dist/` (including the dotfile `.htaccess`, which comes from `frontend/public/.htaccess`) into `~/public_html/necromarc/`. Leave the `api/` subdirectory untouched; do not delete it when syncing (for example, rsync without `--delete`, or exclude `api/`).
 
-The `.htaccess` provides: no directory listing, `DirectoryIndex index.html`, HTTPS redirect, trailing-slash redirect for directories, dotfile denial, immutable caching for `_astro/` assets, `no-cache` for HTML, `X-Content-Type-Options`, `Referrer-Policy` and a Content-Security-Policy. There is no SPA fallback rewrite, because each route is a real directory with an `index.html`.
+The `.htaccess` provides: an `api/` pass-through (`RewriteRule ^api(/|$) - [L]`), no directory listing, HTTPS redirect, trailing-slash redirect for directories, explicit rewrites from each directory URL to its `index.html`, denial of `.ftp-deploy-sync-state.json` and `.htaccess.bak` by name, immutable caching for `_astro/` assets, `no-cache` for HTML, `X-Content-Type-Options`, `Referrer-Policy` and a Content-Security-Policy. There is no SPA fallback rewrite, because each route is a real directory with an `index.html`. The repository copy matches the configuration verified on the production server.
 
 ### Frontend-only updates
 
@@ -119,10 +119,29 @@ One-time setup:
 What is protected:
 
 - `api/` is excluded, so it is neither uploaded nor deleted. The Passenger mount keeps working.
-- `.htaccess` is excluded, so the file on the server (with the `RewriteCond %{REQUEST_URI} !^/necromarc/api` exception) is never replaced. The same exception is now also in `frontend/public/.htaccess`, so a manual upload is safe too.
-- The action keeps `.ftp-deploy-sync-state.json` in the server directory. It records what the action uploaded, and only those files are ever deleted. Dotfiles are denied by `.htaccess`, so it is not downloadable. Keep `dangerous-clean-slate` at `false`.
+- `.htaccess` is excluded, so the file on the server is never replaced. `frontend/public/.htaccess` holds the same verified configuration, so a manual upload is safe too.
+- The action keeps `.ftp-deploy-sync-state.json` in the server directory. It records what the action uploaded, and only those files are ever deleted. `.htaccess` denies it by name, so it is not downloadable (check that `https://3aai.in/necromarc/.ftp-deploy-sync-state.json` returns 403). Keep `dangerous-clean-slate` at `false`.
 
 Because `.htaccess` is not deployed, a change to `frontend/public/.htaccess` (for example the Content-Security-Policy) must be copied to the server by hand.
+
+### Sample pool release (backend and frontend)
+
+This release changes both sides. Deploy in this order:
+
+1. **Database:** apply `supabase/migrations/20260101000007_sample_reset.sql` (adds `preview_sample_reset()` and `reset_sample_records()`, executable by `service_role` only). It is already applied to the production project.
+2. **Backend:** upload `backend/` (including `backend/samples/sample_pool.mrc`) to `~/necromarc_api/`, then `touch ~/necromarc_api/tmp/restart.txt`. `backend/samples/tomb.mrc` is no longer used and can be deleted from the server.
+3. **Frontend:** push to `main`; the GitHub Actions job deploys `dist/`.
+
+The old and new versions work together during the switch: the new `GET /api/samples/tomb` fields (`total`, `remaining`, `exhausted`) and the `source` field on `POST /api/resurrect` are optional on both sides.
+
+Refill the sample pool when it runs out (from `~/necromarc_api/`, inside the application virtualenv):
+
+```bash
+python -m backend.scripts.reset_samples            # dry run: prints counts, deletes nothing
+python -m backend.scripts.reset_samples --confirm  # deletes only source='sample' records
+```
+
+Exit codes: 0 success, 1 database error, 2 configuration error. The command never prints secret values.
 
 ## 8. Upload size limit
 
@@ -147,9 +166,11 @@ curl -i -X OPTIONS https://3aai.in/necromarc/api/records \
 curl -I https://3aai.in/necromarc/
 ```
 
-Expect: health returns 200 with a healthy body; records returns the seeded records; the preflight returns 204 with `Access-Control-Allow-Origin: https://3aai.in` (an origin outside `CORS_ORIGINS` gets no CORS headers); the site returns 200 with the security headers above, and `http://` redirects to `https://`. Also check that `https://3aai.in/necromarc/.htaccess` and `https://3aai.in/necromarc/api/` paths outside `/api` routes are denied or 404.
+Expect: health returns 200 with a healthy body; records returns the seeded records; the preflight returns 204 with `Access-Control-Allow-Origin: https://3aai.in` (an origin outside `CORS_ORIGINS` gets no CORS headers); the site returns 200 with the security headers above, and `http://` redirects to `https://`. Also check that `https://3aai.in/necromarc/.htaccess` and `https://3aai.in/necromarc/.ftp-deploy-sync-state.json` return 403, that `https://3aai.in/necromarc/chamber/` returns 200, and that `https://3aai.in/necromarc/api/` paths outside `/api` routes are denied or 404.
 
 ## Troubleshooting
+
+- **Every directory URL returns 403 (`/necromarc/`, `/necromarc/chamber/`), but `/necromarc/index.html` returns 200.** The host is not mapping directory URLs to `index.html`, so `Options -Indexes` denies them. This happened on the LiteSpeed host with an earlier `.htaccess` that relied on `DirectoryIndex` alone and denied dotfiles with `<FilesMatch "^\.">` and a `(^|/)\.` rewrite rule. Use the current `frontend/public/.htaccess`, which rewrites directory URLs to `index.html` explicitly and denies sensitive dotfiles by name. The exact LiteSpeed rule that caused the 403 was not isolated, so do not reintroduce the broad dotfile rules.
 
 - 500 at startup: read the Passenger error log; configuration problems are listed by variable name.
 - CORS errors in the browser: the page origin must match an entry in `CORS_ORIGINS` exactly (scheme and host).

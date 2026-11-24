@@ -156,7 +156,7 @@ def test_resurrect_route_end_to_end_with_fake_pipeline_deps():
     assert r.status_code == 200
     c.application.extensions["resurrection_pipeline"] = pipe(repo, FakeLLM({"x"}))
     r = c.post("/api/resurrect", headers=h, json={"records": [raw("x")]})
-    assert r.status_code == 502 and r.json["error"]["code"] == "BATCH_FAILED"
+    assert r.status_code == 422 and r.json["error"]["code"] == "BATCH_FAILED"
 
 
 def test_semantic_search():

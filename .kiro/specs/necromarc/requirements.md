@@ -220,7 +220,7 @@ Constraints from the project constitution: no local machine learning, no hardcod
 1. WHEN a Judge uploads a `.mrc` file of 1 byte up to the Config maximum upload size to `POST /api/upload-mrc`, THE API SHALL parse the file and return the Parsed_Records, each with its Decay_Score.
 2. WHEN a Judge posts a batch of 1 to 5 records to `POST /api/resurrect`, THE API SHALL attempt to resurrect each record independently and return one Resurrection_Result per submitted record, in the submitted order, each carrying a per-record status of either success or failure.
 3. IF one or more records in a batch fail to resurrect while at least one other record succeeds, THEN THE API SHALL return the successful Resurrection_Results together with the failed per-record statuses and an error indication for each failed record, and SHALL NOT discard or roll back the successful results.
-4. IF every record in a batch fails to resurrect, THEN THE API SHALL return a per-record failure status for each record and an error indication that the batch produced no successful results.
+4. IF every record in a batch fails to resurrect, THEN THE API SHALL respond with HTTP 422 and error code `BATCH_FAILED`, and SHALL return a per-record failure status with an error code for each record together with the batch summary. (A 4xx status is used so that reverse proxies pass the JSON body through unchanged.)
 5. IF a batch contains more than 5 records, THEN THE API SHALL respond with HTTP 413, SHALL process none of the records, and SHALL NOT call OpenRouter or Gemini.
 6. IF a batch contains 0 records, THEN THE API SHALL respond with an error indicating that at least 1 record is required, and SHALL NOT call OpenRouter or Gemini.
 7. IF an uploaded file exceeds the Config maximum upload size in bytes, THEN THE API SHALL respond with HTTP 413 and SHALL NOT parse the file.
@@ -416,3 +416,21 @@ Constraints from the project constitution: no local machine learning, no hardcod
 5. THE repository SHALL contain documentation that describes how the Supabase MCP server is used for schema inspection, including the MCP server name as it appears in the Kiro MCP configuration and at least one example inspection task.
 6. WHERE the Library of Congress SRU MCP server is available, THE repository SHALL contain documentation stating that its use for fetching live MARCXML during development is optional, and naming the MCP server as it appears in the Kiro MCP configuration.
 7. THE repository SHALL contain a `README.md` at the repository root that includes a section explaining the ISO 2709 legacy-container problem, a statement that MARC 21 remains an actively maintained standard, and a hyperlink to the live site that resolves to an absolute `https://` URL.
+
+### Requirement 20: Sample Pool and Sample Reset
+
+**User Story:** As a Judge, I want each "Summon & Resurrect Sample Tomb" action to give me records that have not been resurrected yet, so that I can try the resurrection more than once without hitting duplicates. As the project owner, I want to refill the sample pool safely.
+
+#### Acceptance Criteria
+
+1. THE repository SHALL bundle a sample pool file `backend/samples/sample_pool.mrc` that holds 50 real public-domain records taken from Project Gutenberg Australia MARC files, each with 245 `$a` and 100 `$a`, no 520, and a Decay_Score of at least 30.
+2. THE sample pool records SHALL use control numbers `necro-sample-001` to `necro-sample-050`, and each SHALL keep its original control number in `035 $a` with the prefix `(PGA)`.
+3. WHEN `GET /api/samples/tomb` is requested, THE API SHALL return up to 4 records drawn at random from the sample pool records whose control number has not been resurrected under source `sample`, with no record repeated in one response.
+4. THE `GET /api/samples/tomb` response SHALL contain `filename`, `records`, `count`, `total` (pool size), `remaining` (records not yet resurrected), and `exhausted` (true exactly when `remaining` is 0), and `count` SHALL equal the smaller of 4 and `remaining`.
+5. IF the Database is unreachable while `GET /api/samples/tomb` computes the remaining records, THEN THE API SHALL respond with HTTP 503.
+6. WHEN a Judge posts a batch to `POST /api/resurrect` with `"source": "sample"`, THE API SHALL store the resurrected records under source `sample`. A batch without `source`, or with `"source": "upload"`, SHALL be stored under source `upload`. Any other value SHALL be rejected with HTTP 400 `VALIDATION_ERROR`.
+7. IF a batch posted with `"source": "sample"` contains a record whose control number does not belong to the bundled sample pool, THEN THE API SHALL respond with HTTP 400 `INVALID_SAMPLE` and SHALL NOT call OpenRouter or Gemini.
+8. WHEN `GET /api/samples/tomb` reports `exhausted`, THE Frontend SHALL display a message stating that every sample record has been resurrected, with a link to the archive and a link to the MARC sources on the summon page, and SHALL NOT send a resurrect request. THE Frontend SHALL never display a raw i18n key; an error code without a translation SHALL be shown as the generic error message.
+9. THE repository SHALL provide an admin command `python -m backend.scripts.reset_samples` that, without the `--confirm` flag, prints the number of sample records by status and the number of knowledge edges that a reset would remove, states that nothing was deleted, and deletes nothing.
+10. WHEN the admin command runs with `--confirm`, THE command SHALL delete only `marc_records` rows whose source is `sample` (their knowledge edges are removed by the foreign-key cascade), SHALL leave every row with any other source unchanged, and SHALL print the number of deleted records.
+11. THE reset and preview SHALL be database functions executable by `service_role` only, with execute revoked from `public`, `anon`, and `authenticated`, and THE admin command SHALL NOT print secret values.

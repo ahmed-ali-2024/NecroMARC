@@ -36,6 +36,11 @@ export function translate(
   return s;
 }
 
+/** True when `key` has a translation (English is the fallback, so it holds every key). */
+export function hasKey(key: string, dicts: Record<Lang, Dict> = DICTS): boolean {
+  return Object.prototype.hasOwnProperty.call(dicts.en, key);
+}
+
 let current: Lang = 'en';
 
 export function getLang(): Lang {

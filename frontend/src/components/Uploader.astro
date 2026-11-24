@@ -19,6 +19,15 @@
   <div class="flex flex-wrap items-center gap-3">
     <button type="button" id="up-tomb" class="btn" data-i18n="summon.tomb.button">Summon &amp; Resurrect Sample Tomb</button>
   </div>
+  <p id="up-tomb-remaining" role="status" aria-live="polite" hidden class="font-mono text-xs"></p>
+  <div id="up-tomb-exhausted" role="status" hidden class="grid gap-2">
+    <p class="font-serif text-gold" data-i18n="summon.tomb.exhausted_title">Every sample has been resurrected</p>
+    <p id="up-tomb-exhausted-text"></p>
+    <p class="flex flex-wrap gap-3">
+      <a id="up-tomb-archive" href="/" class="text-gold underline" data-i18n="summon.tomb.archive_link">Browse the resurrected archive</a>
+      <a id="up-tomb-sources" href="#marc-sources" class="text-gold underline" data-i18n="summon.tomb.sources_link">Get a MARC file to upload</a>
+    </p>
+  </div>
   <div id="up-tomb-guest" class="flex flex-wrap items-center gap-3" hidden>
     <span data-i18n="summon.guest">Uploading and resurrecting are available to judges.</span>
     <button type="button" id="up-login2" class="btn" data-i18n="nav.login">Judge login</button>
@@ -61,11 +70,11 @@
 </section>
 <script>
   import { getTomb, resurrect, uploadMrc } from '../lib/api';
-  import type { ParsedItem, RawRecord, ResurrectResponse } from '../lib/api';
+  import type { ParsedItem, RawRecord, ResurrectResponse, ResurrectSource, TombResponse } from '../lib/api';
   import { isJudge } from '../lib/auth';
   import { t } from '../i18n/i18n';
   import { appendLine, showFailure, showSuccess } from '../lib/terminal';
-  import { MAX_BATCH_RECORDS, summonErrorView, validateUpload } from '../lib/upload';
+  import { MAX_BATCH_RECORDS, batchFailedBody, outcomeKey, summonErrorView, validateUpload } from '../lib/upload';
   import { filterItems, paginate, selectTopDecay, sortItems, toggleSelection } from '../lib/selection';
   import type { SortMode } from '../lib/selection';
 
@@ -99,6 +108,10 @@
   const summaryEl = $('up-summary');
   const outcomeList = $('up-outcome-list');
   const log = document.querySelector<HTMLElement>('[data-terminal-log]') as HTMLElement;
+  const tombRemaining = $('up-tomb-remaining');
+  const tombExhausted = $('up-tomb-exhausted');
+  const tombExhaustedText = $('up-tomb-exhausted-text');
+  $<HTMLAnchorElement>('up-tomb-archive').href = `${base}/`;
 
   let items: ParsedItem[] = [];
   let parseErrorCount = 0;
@@ -112,6 +125,34 @@
   let errorState: { key: string; params?: Record<string, number> } | null = null;
   let statusKey: string | null = null;
   let last: ResurrectResponse | null = null;
+  let tomb: { total: number; remaining: number; exhausted: boolean } | null = null;
+
+  /** Pool status line, or the exhaustion message (Requirement 20.8). An older backend sends no pool fields. */
+  function renderTomb() {
+    tombRemaining.hidden = tomb === null || tomb.exhausted;
+    tombExhausted.hidden = tomb === null || !tomb.exhausted;
+    if (!tomb) return;
+    tombRemaining.textContent = t('summon.tomb.remaining', { remaining: tomb.remaining, total: tomb.total });
+    tombExhaustedText.textContent = t('summon.tomb.exhausted', { total: tomb.total });
+  }
+
+  function setTomb(res: TombResponse) {
+    tomb = typeof res.total === 'number' && typeof res.remaining === 'number'
+      ? { total: res.total, remaining: res.remaining, exhausted: res.exhausted === true || res.remaining === 0 }
+      : null;
+    renderTomb();
+  }
+
+  function failureText(index: number, code: string): string {
+    return t('summon.log.fail_reason', { index: index + 1, reason: t(outcomeKey(code)) });
+  }
+
+  function logResults(res: ResurrectResponse) {
+    for (const r of res.results) {
+      if (r.status === 'success') appendLine(log, t('summon.log.ok', { index: r.index + 1 }), 'success');
+      else appendLine(log, failureText(r.index, r.error.code), 'failure');
+    }
+  }
 
   function setError(e: { key: string; params?: Record<string, number> } | null) {
     errorState = e;
@@ -222,7 +263,7 @@
         li.append(a);
       } else {
         li.className = 'text-decay-red';
-        li.textContent = t('summon.log.fail', { index: r.index + 1, code: r.error.code });
+        li.textContent = failureText(r.index, r.error.code);
       }
       outcomeList.append(li);
     }
@@ -243,7 +284,7 @@
     if (v.expired) syncAuth();
   }
 
-  async function run(records: RawRecord[]) {
+  async function run(records: RawRecord[], source: ResurrectSource = 'upload') {
     if (busy || records.length === 0) return;
     if (records.length > MAX_BATCH_RECORDS) {
       setError({ key: 'summon.error.too_many' });
@@ -256,19 +297,32 @@
     setStatus('summon.running');
     appendLine(log, t('summon.log.start', { count: records.length }));
     try {
-      const res = await resurrect(records);
+      const res = await resurrect(records, { source });
       last = res;
-      for (const r of res.results) {
-        if (r.status === 'success') appendLine(log, t('summon.log.ok', { index: r.index + 1 }), 'success');
-        else appendLine(log, t('summon.log.fail', { index: r.index + 1, code: r.error.code }), 'failure');
-      }
+      logResults(res);
       if (res.summary.succeeded > 0) showSuccess(log);
       else showFailure(log);
       renderOutcome();
     } catch (e) {
+      // 422 BATCH_FAILED carries the per-record results: show them instead of a bare error.
+      const failed = batchFailedBody(e);
+      if (failed) {
+        last = failed;
+        logResults(failed);
+        renderOutcome();
+      }
       showFailure(log);
       handleError(e);
     } finally {
+      if (source === 'sample' && tomb && last) {
+        // Successes and duplicates are both resurrected now, so neither can be drawn again.
+        const used = last.results.filter(
+          (r) => r.status === 'success' || r.error.code === 'DUPLICATE_RESURRECTED',
+        ).length;
+        const remaining = Math.max(0, tomb.remaining - used);
+        tomb = { ...tomb, remaining, exhausted: remaining === 0 };
+        renderTomb();
+      }
       setStatus(null);
       setBusy(false);
     }
@@ -312,9 +366,12 @@
     setBusy(true);
     setStatus('summon.tomb.loading');
     try {
-      const tomb = await getTomb();
+      const res = await getTomb();
+      setStatus(null);
       setBusy(false);
-      await run(tomb.records.slice(0, MAX_BATCH_RECORDS).map((r) => r.record));
+      setTomb(res);
+      if (res.exhausted || res.records.length === 0) return; // message shown, nothing to send
+      await run(res.records.slice(0, MAX_BATCH_RECORDS).map((r) => r.record), 'sample');
     } catch (e) {
       setStatus(null);
       setBusy(false);
@@ -381,5 +438,6 @@
     setStatus(statusKey);
     renderItems();
     renderOutcome();
+    renderTomb();
   });
 </script>

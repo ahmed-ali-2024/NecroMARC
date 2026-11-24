@@ -28,6 +28,17 @@ NecroMARC parses these files defensively, reports decay (broken directories, enc
   - [British Online Archives](https://britishonlinearchives.com/librarian-resources/marc-21-records) (collection list)
   - [Open Book Publishers](https://www.openbookpublishers.com/libraries/marc-records) (availability not verified)
 
+## Sample Tomb and the sample pool
+- **Pool.** `backend/samples/sample_pool.mrc` holds 50 real public-domain records from the [Project Gutenberg Australia](https://gutenberg.net.au/marc.html) MARC files (Orwell, Woolf, Fitzgerald, Gibran, Lawson, Paterson and others), decayed on purpose: no 520 summary, no 650 subjects, a broken 008 year, and on some records no 100 `$d`. Control numbers are `necro-sample-001` to `necro-sample-050`; the PGA ebook id is kept in `035 $a (PGA)<id>`. Rebuild it with `python -m backend.scripts.build_sample_tomb` (needs `MARC-FILES-PGA/`).
+- **Each click is different.** "Summon & Resurrect Sample Tomb" asks `GET /api/samples/tomb` for up to 4 pool records that have not been resurrected yet, then resurrects them with `source: "sample"`. The page shows how many pool records are left. When none are left it says so and links to the archive and to the MARC sources instead of sending a request.
+- **Readable failures.** If every record in a batch fails, the API returns HTTP 422 `BATCH_FAILED` with the reason for each record, and the page lists them (for example "already resurrected earlier").
+- **Refilling the pool (admin).** From the application root, with the production configuration:
+  ```bash
+  python -m backend.scripts.reset_samples            # dry run: counts only, deletes nothing
+  python -m backend.scripts.reset_samples --confirm  # deletes only source='sample' records
+  ```
+  The reset deletes only records stored with `source = 'sample'`, through a database function that only the service role can run. Every other archive record stays. Knowledge-graph edges that touch a deleted sample record are removed with it.
+
 ## Architecture
 
 ```

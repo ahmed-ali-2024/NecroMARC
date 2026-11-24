@@ -463,6 +463,42 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     - Run `npm test`, `npm run check:i18n`, `npm run build` with `PUBLIC_BASE_PATH=/necromarc` and `PUBLIC_API_URL=https://3aai.in/necromarc/api`, `npm run check:bundle`, backend `pytest`, `python scripts/check_deps.py`, and `python scripts/secret_scan.py`. The environment blocks sourcing `.env`, so do not run live database tests.
     - _Requirements: 16.12, 17.14, 18.9_
 
+- [x] 27. Phase 11: Sample pool, admin reset, readable batch failures
+  - [x] 27.1 Build the 50-record sample pool
+    - Rewrite `backend/scripts/build_sample_tomb.py` to read `MARC-FILES-PGA/*.mrc` read-only with `parse_iso2709` (clear error if the folder is missing). Pick 50 records that have 245 `$a` and 100 `$a`, preferring well-known authors, with a deterministic selection.
+    - Apply varied decay (remove 520, remove 650, remove 100 `$d`, broken 008 year, short 008), renumber to `necro-sample-001`..`necro-sample-050`, keep the original control number in `035 $a (PGA)<orig>`, and write `backend/samples/sample_pool.mrc` with `print_iso2709`. Print the chosen list for review.
+    - Add tests: exactly 50 records with no parse errors, unique `necro-sample-NNN` control numbers, every record has 245 and 100 `$a` and no 520, decay score at least 30, file under 100 KB, and two builds are byte-identical.
+    - _Requirements: 20.1, 20.2_
+
+  - [x] 27.2 Serve non-repeating samples from `GET /api/samples/tomb`
+    - Add `resurrected_control_numbers(source)` to `RecordsRepo` (one PostgREST select) and `FakeRecordsRepo`.
+    - Read `sample_pool.mrc`, drop control numbers already resurrected under `source = 'sample'`, and return `min(4, remaining)` records drawn at random (injectable RNG). Keep `filename`, `records`, `count`, and add `total`, `remaining`, `exhausted`. A database failure returns 503. Remove `backend/samples/tomb.mrc`.
+    - Update `test_sample_tomb` to the new contract. Add **Property 36: Sample selection** (Hypothesis).
+    - _Requirements: 20.3, 20.4, 20.5_
+
+  - [x] 27.3 Accept `source: "sample"` on `/api/resurrect` and return 422 for all-failed batches
+    - Register `app.extensions["sample_pipeline"]` built with `source="sample"`. Accept an optional `source` in `{"upload", "sample"}` (default `upload`, anything else `400 VALIDATION_ERROR`). `source: "sample"` requires every record's 001 to belong to the pool, else `400 INVALID_SAMPLE` with no pipeline call.
+    - An all-failed batch returns HTTP 422 with `error.code = BATCH_FAILED`, `results`, and `summary`. Change the existing 502 assertions to 422 and nothing else.
+    - Add tests: sample batches are stored with `source = 'sample'`, a spoofed sample batch gets 400 without a pipeline call, upload batches keep `upload`, and an all-duplicate batch gets 422 with per-record `DUPLICATE_RESURRECTED`.
+    - _Requirements: 9.4, 20.6, 20.7_
+
+  - [x] 27.4 Add the sample reset migration and admin script
+    - Add `supabase/migrations/20260101000007_sample_reset.sql`: `reset_sample_records()` (security definer, `set search_path = public`, deletes only `source = 'sample'` rows, returns the count) and `preview_sample_reset()` (stable, read only, counts by status and affected edges). Revoke both from `public`, `anon`, `authenticated`; grant execute to `service_role` only. Apply through the Supabase MCP and verify the delete scoping only inside a rolled-back transaction.
+    - Add `python -m backend.scripts.reset_samples`: dry run by default (prints the preview and states that nothing was deleted); `--confirm` calls the reset and prints the deleted count. Never print secrets. Exit 2 on a configuration error and 1 on a database error.
+    - Add offline SQL checks, respx tests (no reset call without `--confirm`, exactly one with it, no other endpoint called), and **Property 37: Reset scoping** on `FakeRecordsRepo`.
+    - _Requirements: 20.9, 20.10, 20.11_
+
+  - [x] 27.5 Update the frontend tomb flow and error messages
+    - `resurrect(records, { source })` sends `source`; `TombResponse` gains optional `total`, `remaining`, `exhausted`. The tomb flow sends `source: "sample"` and shows the remaining count.
+    - When the pool is exhausted, show a message with links to the archive and to the MARC sources on the summon page. On `BATCH_FAILED`, render per-record outcomes from the response body. Map per-record codes to translated messages, and fall back to `error.unknown` for any code without a dictionary entry, so no raw `error.*` key is ever shown.
+    - Add keys to `en.json` and `ar.json` in parity, update `about.use.s3`, and use logical Tailwind utilities only. Add happy-dom tests for the exhausted message, a 422 with per-record lines, an unknown code, and `source: "sample"` in the request body.
+    - _Requirements: 9.4, 20.8, 13.8_
+
+  - [x] 27.6 Update documentation and run final verification
+    - Update `README.md` (sample pool, reset command, PGA attribution) and `docs/deployment.md` (deployment order: migration 0007, backend upload and restart, then push to `main`; reset usage).
+    - Run backend `pytest`, `python scripts/check_deps.py`, `python scripts/secret_scan.py`, `npm test`, `npm run check:i18n`, `npm run build` with `PUBLIC_BASE_PATH=/necromarc` and `PUBLIC_API_URL=https://3aai.in/necromarc/api`, and `npm run check:bundle`. Do not run live database tests.
+    - _Requirements: 16.12, 18.9, 20.11_
+
 ## Notes
 
 - Tasks marked with `*` are optional and can be skipped for a faster MVP. Core implementation tasks are never optional.
@@ -503,7 +539,13 @@ The plan follows the approved nine phases. Each phase ends with a checkpoint and
     { "id": 24, "tasks": ["26.2"] },
     { "id": 25, "tasks": ["26.4"] },
     { "id": 26, "tasks": ["26.5"] },
-    { "id": 27, "tasks": ["26.6"] }
+    { "id": 27, "tasks": ["26.6"] },
+    { "id": 28, "tasks": ["27.1"] },
+    { "id": 29, "tasks": ["27.2"] },
+    { "id": 30, "tasks": ["27.3"] },
+    { "id": 31, "tasks": ["27.4"] },
+    { "id": 32, "tasks": ["27.5"] },
+    { "id": 33, "tasks": ["27.6"] }
   ]
 }
 ```

@@ -69,6 +69,18 @@ class RecordsRepo:
             params.append(("status", f"eq.{status}"))
         return bool(self._c.select("marc_records", params, range=(0, 0)))
 
+    def resurrected_control_numbers(self, source: str) -> set:
+        """Control numbers already resurrected under ``source`` (one PostgREST select)."""
+        rows = self._c.select("marc_records", [("select", "control_number"), ("source", f"eq.{source}"),
+                                               ("status", "eq.resurrected")])
+        return {r["control_number"] for r in rows or [] if r.get("control_number")}
+
+    def preview_sample_reset(self) -> List[dict]:
+        return self._c.rpc("preview_sample_reset", {}) or []
+
+    def reset_sample_records(self) -> int:
+        return int(self._c.rpc("reset_sample_records", {}) or 0)
+
     def store_resurrection(self, payload: Mapping[str, Any]) -> str:
         """``payload`` is ``{"record": {...}, "edges": [{other_id, edge_type, weight}]}``.
 
@@ -183,6 +195,26 @@ class FakeRecordsRepo:
     def exists(self, source, control_number, status=None):
         return any(r.get("source") == source and r.get("control_number") == control_number
                    and (status is None or r["status"] == status) for r in self.records.values())
+
+    def resurrected_control_numbers(self, source):
+        return {r["control_number"] for r in self.records.values()
+                if r.get("source") == source and r.get("status") == "resurrected"}
+
+    def preview_sample_reset(self):
+        ids = {k for k, r in self.records.items() if r.get("source") == "sample"}
+        edges = sum(1 for e in self.edges if e["source_id"] in ids or e["target_id"] in ids)
+        counts: Dict[str, int] = {}
+        for k in ids:
+            st = self.records[k]["status"]
+            counts[st] = counts.get(st, 0) + 1
+        return [{"status": st, "records": n, "edges": edges} for st, n in sorted(counts.items())]
+
+    def reset_sample_records(self):
+        ids = {k for k, r in self.records.items() if r.get("source") == "sample"}
+        for k in ids:
+            del self.records[k]
+        self.edges = [e for e in self.edges if e["source_id"] not in ids and e["target_id"] not in ids]
+        return len(ids)
 
     def _find(self, source, control_number):
         for r in self.records.values():

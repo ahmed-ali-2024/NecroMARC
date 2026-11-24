@@ -1,7 +1,12 @@
 """POST /api/resurrect guards (Req 3, 7.7, 9.2, 9.5, 9.6).
 
-Order: authenticate, rate limit, batch-size checks, per-record schema validation,
-idempotency guard, then the injectable pipeline (``app.extensions['resurrection_pipeline']``).
+Order: authenticate, rate limit, batch-size checks, ``source`` check, per-record schema
+validation, sample-pool membership (``source: "sample"`` only, Req 20.7), idempotency guard,
+then the injectable pipeline: ``app.extensions['resurrection_pipeline']`` (source ``upload``) or
+``app.extensions['sample_pipeline']`` (source ``sample``, Req 20.6).
+
+A batch where every record fails returns HTTP 422 ``BATCH_FAILED`` with ``results`` and
+``summary`` (Req 9.4). A 4xx keeps the JSON body intact through the reverse proxies.
 
 Pipeline contract (wired in task 15.5): a callable ``pipeline(records: list[dict]) -> list[dict]``
 that receives the validated raw records to process and returns one per-record result dict per
@@ -25,6 +30,7 @@ from backend.ratelimit.limiter import judge_key
 bp_resurrect = Blueprint("resurrect", __name__)
 
 MAX_BATCH = 5
+SOURCES = {"upload": "resurrection_pipeline", "sample": "sample_pipeline"}
 # Sources under which a record posted here may already be stored (upload flow and bundled sample).
 IDEMPOTENCY_SOURCES = ("upload", "sample")
 
@@ -93,9 +99,19 @@ def resurrect():
         raise ApiError(400, "EMPTY_BATCH", "At least one record is required.")
     if len(records) > MAX_BATCH:
         raise ApiError(413, "BATCH_TOO_LARGE", f"A batch holds at most {MAX_BATCH} records.")
+    source = body.get("source", "upload")
+    if source not in SOURCES:
+        raise ApiError(400, "VALIDATION_ERROR", "'source' must be 'upload' or 'sample'.")
     _validate(records)
+    if source == "sample":
+        from backend.app.routes.samples import pool_control_numbers
+        pool = pool_control_numbers()
+        for i, rec in enumerate(records):
+            if control_number_of(rec) not in pool:
+                raise ApiError(400, "INVALID_SAMPLE", f"Record {i} is not part of the sample pool.",
+                               extra={"index": i})
 
-    pipeline = current_app.extensions.get("resurrection_pipeline")
+    pipeline = current_app.extensions.get(SOURCES[source])
     if pipeline is None:
         raise ApiError(501, "NOT_IMPLEMENTED", "The resurrection pipeline is not available.")
 
@@ -125,6 +141,6 @@ def resurrect():
     if succeeded == 0:
         resp = jsonify({"error": {"code": "BATCH_FAILED", "message": "The batch produced no successful results."},
                         "results": final, "summary": summary})
-        resp.status_code = 502
+        resp.status_code = 422
         return resp
     return jsonify({"results": final, "summary": summary})
